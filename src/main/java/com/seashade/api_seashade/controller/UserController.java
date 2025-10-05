@@ -1,25 +1,72 @@
 package com.seashade.api_seashade.controller;
 
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.seashade.api_seashade.controller.dto.CreateUserDto;
-import com.seashade.api_seashade.model.Role;
+import com.seashade.api_seashade.controller.dto.UserResponseDto;
 import com.seashade.api_seashade.model.User;
-import com.seashade.api_seashade.repository.RoleRepository;
-import com.seashade.api_seashade.repository.UserRepository;
+
+import com.seashade.api_seashade.service.UserService;
 
 
-import jakarta.transaction.Transactional;
 
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping
+    public ResponseEntity<UserResponseDto> newUser(@RequestBody CreateUserDto dto) {
+        try {
+            User createdUser = userService.registerUser(dto);
+            // Converta a entidade para o DTO de resposta
+            UserResponseDto responseDto = new UserResponseDto(createdUser); 
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        } catch (RuntimeException e) {
+            // ... tratamento de erro
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        }
+    }
+}
+/* 
+@RestController
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<UserResponseDto> newUser(@RequestBody CreateUserDto dto) {
+        try {
+            User createdUser = userService.registerUser(dto);
+            UserResponseDto responseDto = new UserResponseDto(createdUser); 
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        } catch (RuntimeException e) {
+            // Exemplo de tratamento de exceção
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        }
+    }
+}
+
+*/
+
+/* 
 @RestController
 public class UserController {
 
@@ -60,5 +107,7 @@ public class UserController {
     }
 
 }
+
+*/
     
 

@@ -19,11 +19,15 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 
 
 @Entity
 @Table(name = "tb_users")
+@Getter
+@Setter
 public class User {
 
     @Id
@@ -49,7 +53,7 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
     private Quiosque quiosque;
 
-    public User(UUID userId, String name, String email, String password, Set<Role> roles) {
+    public User(UUID userId,String name, String email, String password, Set<Role> roles) {
         this.userId = userId;
         this.name = name;
         this.email = email;
@@ -58,14 +62,15 @@ public class User {
     }
 
     public User() {
-        //TODO Auto-generated constructor stub
     }
+
+
 
     public boolean isLoginCorrent(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
         return passwordEncoder.matches(loginRequest.password(), this.password);
 
     }
-
+ 
     public UUID getUserId() {
         return userId;
     }

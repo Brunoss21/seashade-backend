@@ -1,0 +1,37 @@
+package com.seashade.api_seashade.controller.dto;
+
+import com.seashade.api_seashade.model.User;
+import java.util.UUID;
+
+
+public class UserResponseDto {
+
+    private UUID userId;
+    private String name;
+    private String email;
+    private QuiosqueResponseDto quiosque;
+
+    public UserResponseDto(User user) {
+        this.userId = user.getUserId();
+        this.name = user.getName();
+        this.email = user.getEmail();
+        this.quiosque = new QuiosqueResponseDto(user.getQuiosque());
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+     public QuiosqueResponseDto getQuiosque() {
+        return quiosque;
+    }
+
+}
