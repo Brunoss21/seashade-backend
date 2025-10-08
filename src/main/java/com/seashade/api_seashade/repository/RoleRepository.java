@@ -1,5 +1,6 @@
 package com.seashade.api_seashade.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,7 @@ import com.seashade.api_seashade.model.Role;
 @Repository
 public interface RoleRepository extends JpaRepository<Role, UUID> {
 
-    Role findByName(String name);
+    /*Role findByName(String name);*/
+    Optional<Role> findByName(String name);
 
 }

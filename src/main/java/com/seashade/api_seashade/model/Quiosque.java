@@ -2,6 +2,9 @@ package com.seashade.api_seashade.model;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,6 +28,7 @@ public class Quiosque {
 
     @OneToOne
     @JoinColumn(name = "user_id", unique = true, nullable = false)
+    @JsonBackReference
     private User user;
 
     public Quiosque(String name, User user){
@@ -71,8 +75,7 @@ public class Quiosque {
     }
 
     public UUID getQuiosqueId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getQuiosqueId'");
+    return this.id;
     }
    
     

@@ -9,11 +9,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
-
 
 @Entity
-@Data
 @Table(name = "tb_roles")
 public class Role {
 
@@ -24,19 +21,13 @@ public class Role {
 
     private String name;
 
-    public enum Values{
-        BASIC(UUID.fromString("00000000-0000-0000-0000-000000000002")),
-        ADMIN(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+    public UUID getRoleId() { return roleId; }
+    public void setRoleId(UUID roleId) { this.roleId = roleId; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-        UUID roleId;
-
-        Values(UUID roleId){
-            this.roleId = roleId;
-        }
-
-
-        public UUID getRoleId() {
-            return roleId;
-        }
-    }
+    public Role() {}
+    public Role(String name) { this.name = name; }
 }
+
+

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.seashade.api_seashade.controller.dto.LoginRequest;
 
 import jakarta.persistence.CascadeType;
@@ -21,7 +22,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-
 
 
 @Entity
@@ -51,6 +51,7 @@ public class User {
     private Set<Role> roles;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
+    @JsonManagedReference
     private Quiosque quiosque;
 
     public User(UUID userId,String name, String email, String password, Set<Role> roles) {
@@ -107,9 +108,6 @@ public class User {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
 
     public Quiosque getQuiosque() {
         return quiosque;
@@ -119,5 +117,11 @@ public class User {
         this.quiosque = quiosque;
     }
 
+    public void setRoles(Set<Role> roles) {
+    this.roles = roles;
+    }
     
 }
+
+
+
