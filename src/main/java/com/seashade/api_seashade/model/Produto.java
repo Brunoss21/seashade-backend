@@ -3,6 +3,7 @@ package com.seashade.api_seashade.model;
 import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +17,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tb_produtos")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
