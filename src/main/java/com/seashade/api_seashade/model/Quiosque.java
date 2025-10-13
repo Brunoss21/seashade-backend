@@ -1,12 +1,15 @@
 package com.seashade.api_seashade.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,7 +40,20 @@ public class Quiosque {
     }
 
     @OneToMany(mappedBy = "quiosque", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Atendente> atendentes;
+    @JsonManagedReference
+    private List<Atendente> atendentes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "quiosque", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference 
+    private List<Produto> produtos = new ArrayList<>();
+
+    public List<Produto> getProdutos() {
+        return produtos;
+    }
+
+    public void setProdutos(List<Produto> produtos) {
+        this.produtos = produtos;
+    }
 
     public Quiosque() {
     }
@@ -69,7 +85,7 @@ public class Quiosque {
     public List<Atendente> getAtendentes() {
         return atendentes;
     }
-
+    
     public void setAtendentes(List<Atendente> atendentes) {
         this.atendentes = atendentes;
     }

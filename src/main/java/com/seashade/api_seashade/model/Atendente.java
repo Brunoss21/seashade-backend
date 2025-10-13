@@ -1,5 +1,7 @@
 package com.seashade.api_seashade.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,7 +24,8 @@ public class Atendente {
     private String nome;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quiosque_id")
+    @JoinColumn(name = "quiosque_id", nullable = false)
+    @JsonBackReference // Para evitar loops de serialização com Quiosque
     private Quiosque quiosque;
     
     
