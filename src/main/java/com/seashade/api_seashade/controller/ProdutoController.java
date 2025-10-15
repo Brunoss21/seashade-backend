@@ -32,7 +32,7 @@ public class ProdutoController {
     // Endpoint para LISTAR todos os produtos de um quiosque (o cardápio)
     // Ex: GET /api/quiosques/{id-do-quiosque}/produtos
     @GetMapping
-    public ResponseEntity<List<Produto>> listarProdutos(@PathVariable UUID quiosqueId) {
+    public ResponseEntity<List<Produto>> listarProdutos(@PathVariable Long quiosqueId) {
         List<Produto> produtos = produtoService.listarProdutosPorQuiosque(quiosqueId);
         return ResponseEntity.ok(produtos);
     }
@@ -40,7 +40,7 @@ public class ProdutoController {
     // Endpoint para CRIAR um novo produto para um quiosque
     // Ex: POST /api/quiosques/{id-do-quiosque}/produtos
     @PostMapping
-    public ResponseEntity<Produto> criarProduto(@PathVariable UUID quiosqueId, @RequestBody CreateUpdateProdutoDto dto) {
+    public ResponseEntity<Produto> criarProduto(@PathVariable Long quiosqueId, @RequestBody CreateUpdateProdutoDto dto) {
         Produto novoProduto = produtoService.criarProduto(
             quiosqueId,
             dto.nome(),
@@ -62,7 +62,7 @@ public class ProdutoController {
     // Endpoint para ATUALIZAR um produto específico
     // Ex: PUT /api/quiosques/{id-do-quiosque}/produtos/{id-do-produto}
     @PutMapping("/{produtoId}")
-    public ResponseEntity<Produto> atualizarProduto(@PathVariable UUID quiosqueId, 
+    public ResponseEntity<Produto> atualizarProduto(@PathVariable Long quiosqueId, 
                                                     @PathVariable Long produtoId, 
                                                     @RequestBody CreateUpdateProdutoDto dto) {
         Produto produtoAtualizado = produtoService.atualizarProduto(
@@ -78,8 +78,8 @@ public class ProdutoController {
     // Endpoint para DELETAR um produto específico
     // Ex: DELETE /api/quiosques/{id-do-quiosque}/produtos/{id-do-produto}
     @DeleteMapping("/{produtoId}")
-    public ResponseEntity<Void> deletarProduto(@PathVariable UUID quiosqueId, @PathVariable Long produtoId) {
+    public ResponseEntity<Void> deletarProduto(@PathVariable Long quiosqueId, @PathVariable Long produtoId) {
         produtoService.deletarProduto(produtoId);
-        return ResponseEntity.noContent().build(); // Retorna 204 No Content, indicando sucesso
+        return ResponseEntity.noContent().build(); // Retorna 204 No Content.
     }
 }

@@ -2,7 +2,7 @@ package com.seashade.api_seashade.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -26,8 +26,8 @@ import jakarta.persistence.Table;
 public class Quiosque {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String name; 
 
@@ -37,6 +37,7 @@ public class Quiosque {
     private User user;
 
     public Quiosque(String name, User user){
+        this.name = name;
         this.user = user;
 
     }
@@ -60,11 +61,11 @@ public class Quiosque {
     public Quiosque() {
     }
 
-    public UUID getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -92,7 +93,7 @@ public class Quiosque {
         this.atendentes = atendentes;
     }
 
-    public UUID getQuiosqueId() {
+    public Long getQuiosqueId() {
     return this.id;
     }
    

@@ -3,7 +3,6 @@ package com.seashade.api_seashade.service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -26,7 +25,7 @@ public class ProdutoService {
         this.quiosqueRepository = quiosqueRepository;
     }
 
-    public List<Produto> listarProdutosPorQuiosque(UUID quiosqueId){
+    public List<Produto> listarProdutosPorQuiosque(Long quiosqueId){
         Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
         return produtoRepository.findByQuiosque(quiosque);
@@ -38,7 +37,7 @@ public class ProdutoService {
 
     // CRIAR um novo produto
     @Transactional
-    public Produto criarProduto(UUID quiosqueId, String nome, String descricao, BigDecimal preco, Integer estoque) {
+    public Produto criarProduto(Long quiosqueId, String nome, String descricao, BigDecimal preco, Integer estoque) {
         Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
 

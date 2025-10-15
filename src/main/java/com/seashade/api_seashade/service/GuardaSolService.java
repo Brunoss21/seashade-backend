@@ -1,7 +1,6 @@
 package com.seashade.api_seashade.service;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -24,14 +23,14 @@ public class GuardaSolService {
         this.quiosqueRepository = quiosqueRepository;
     }
 
-    public List<GuardaSol> listarGuardaSoisPorQuiosque(UUID quiosqueId) {
+    public List<GuardaSol> listarGuardaSoisPorQuiosque(Long quiosqueId) {
         Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
         return guardaSolRepository.findByQuiosque(quiosque);
     }
 
     @Transactional
-    public GuardaSol criarGuardaSol(UUID quiosqueId, String identificacao) {
+    public GuardaSol criarGuardaSol(Long quiosqueId, String identificacao) {
         Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
 

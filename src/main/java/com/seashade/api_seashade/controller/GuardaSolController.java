@@ -1,7 +1,6 @@
 package com.seashade.api_seashade.controller;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,7 @@ import com.seashade.api_seashade.model.GuardaSol;
 import com.seashade.api_seashade.service.GuardaSolService;
 
 @RestController
-@RequestMapping("/api/quiosques/{quiosqueId}/guardasois") // Rota aninhada sob quiosques
+@RequestMapping("/api/quiosques/{quiosqueId}/guardasois") 
 public class GuardaSolController {
 
     private final GuardaSolService guardaSolService;
@@ -31,7 +30,7 @@ public class GuardaSolController {
     // Endpoint para LISTAR todos os guarda-sóis de um quiosque
     // Ex: GET /api/quiosques/uuid-do-quiosque/guardasois
     @GetMapping
-    public ResponseEntity<List<GuardaSol>> listarGuardaSois(@PathVariable UUID quiosqueId) {
+    public ResponseEntity<List<GuardaSol>> listarGuardaSois(@PathVariable Long quiosqueId) {
         List<GuardaSol> guardaSois = guardaSolService.listarGuardaSoisPorQuiosque(quiosqueId);
         return ResponseEntity.ok(guardaSois);
     }
@@ -39,7 +38,7 @@ public class GuardaSolController {
     // Endpoint para CRIAR um novo guarda-sol para um quiosque
     // Ex: POST /api/quiosques/uuid-do-quiosque/guardasois
     @PostMapping
-    public ResponseEntity<GuardaSol> criarGuardaSol(@PathVariable UUID quiosqueId, @RequestBody CreateGuardaSolDto dto) {
+    public ResponseEntity<GuardaSol> criarGuardaSol(@PathVariable Long quiosqueId, @RequestBody CreateGuardaSolDto dto) {
         GuardaSol novoGuardaSol = guardaSolService.criarGuardaSol(quiosqueId, dto.identificacao());
         return ResponseEntity.status(HttpStatus.CREATED).body(novoGuardaSol);
     }
@@ -47,10 +46,9 @@ public class GuardaSolController {
     // Endpoint para MUDAR O STATUS de um guarda-sol específico
     // Ex: PATCH /api/quiosques/uuid-do-quiosque/guardasois/123/status
     @PatchMapping("/{guardaSolId}/status")
-    public ResponseEntity<GuardaSol> mudarStatusGuardaSol(@PathVariable UUID quiosqueId,
+    public ResponseEntity<GuardaSol> mudarStatusGuardaSol(@PathVariable Long quiosqueId,
                                                          @PathVariable Long guardaSolId,
                                                          @RequestBody UpdateGuardaSolStatusDto dto) {
-        // O quiosqueId no path não é usado diretamente aqui, mas garante que a rota seja consistente
         GuardaSol guardaSolAtualizado = guardaSolService.mudarStatus(guardaSolId, dto.status());
         return ResponseEntity.ok(guardaSolAtualizado);
     }

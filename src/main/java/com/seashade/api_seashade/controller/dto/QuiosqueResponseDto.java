@@ -1,12 +1,10 @@
 package com.seashade.api_seashade.controller.dto;
 
-import java.util.UUID;
-
 import com.seashade.api_seashade.model.Quiosque;
 
 public class QuiosqueResponseDto {
 
-    private UUID quiosqueId;
+    private Long quiosqueId;
     private String name;
 
     public QuiosqueResponseDto(Quiosque quiosque) {
@@ -14,7 +12,7 @@ public class QuiosqueResponseDto {
         this.name = quiosque.getName();
     }
 
-    public UUID getQuiosqueId() {
+    public Long getQuiosqueId() {
         return quiosqueId;
     }
 
