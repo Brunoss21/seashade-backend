@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,6 +33,16 @@ public class Produto {
     @Column(nullable = false)
     private BigDecimal preco;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CategoriaProduto categoria;
+
+    public enum CategoriaProduto {
+        BEBIDA_ALCOOLICA,
+        PORCAO,
+        BEBIDA
+    }
+
     private Integer estoque;
 
     // Muitos Produtos pertencem a um Quiosque
@@ -52,6 +64,8 @@ public class Produto {
     public void setEstoque(Integer estoque) { this.estoque = estoque; }
     public Quiosque getQuiosque() { return quiosque; }
     public void setQuiosque(Quiosque quiosque) { this.quiosque = quiosque; }
+    public CategoriaProduto getCategoria() { return categoria; }
+    public void setCategoria(CategoriaProduto categoria) { this.categoria = categoria; }
 
 
 }

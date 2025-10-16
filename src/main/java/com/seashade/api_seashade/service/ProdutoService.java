@@ -37,7 +37,7 @@ public class ProdutoService {
 
     // CRIAR um novo produto
     @Transactional
-    public Produto criarProduto(Long quiosqueId, String nome, String descricao, BigDecimal preco, Integer estoque) {
+    public Produto criarProduto(Long quiosqueId, String nome, String descricao, BigDecimal preco, Integer estoque, String categoria) {
         Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
 
@@ -47,6 +47,7 @@ public class ProdutoService {
         novoProduto.setPreco(preco);
         novoProduto.setEstoque(estoque);
         novoProduto.setQuiosque(quiosque);
+        novoProduto.setCategoria(Produto.CategoriaProduto.valueOf(categoria));
 
         return produtoRepository.save(novoProduto);
     }

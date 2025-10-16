@@ -46,7 +46,8 @@ public class ProdutoController {
             dto.nome(),
             dto.descricao(),
             dto.preco(),
-            dto.estoque()
+            dto.estoque(),
+            dto.categoria()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(novoProduto);
     }
@@ -71,6 +72,7 @@ public class ProdutoController {
             dto.descricao(),
             dto.preco(),
             dto.estoque()
+
         );
         return ResponseEntity.ok(produtoAtualizado);
     }
