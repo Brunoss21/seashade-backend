@@ -36,7 +36,7 @@ public class TokenController {
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
         var now = Instant.now();
-        var expiresIn = 300L;
+        var expiresIn = 18000L;
 
         var claims = JwtClaimsSet.builder()
             .issuer("seashade")

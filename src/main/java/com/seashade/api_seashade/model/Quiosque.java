@@ -50,6 +50,17 @@ public class Quiosque {
     @JsonManagedReference 
     private List<Produto> produtos = new ArrayList<>();
 
+    @OneToMany(mappedBy = "quiosque", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ItemEstoque> itensEstoque = new ArrayList<>();
+
+    public List<ItemEstoque> getItensEstoque() {
+        return itensEstoque;
+    }
+    public void setItensEstoque(List<ItemEstoque> itensEstoque) {
+        this.itensEstoque = itensEstoque;
+    }
+
     public List<Produto> getProdutos() {
         return produtos;
     }
