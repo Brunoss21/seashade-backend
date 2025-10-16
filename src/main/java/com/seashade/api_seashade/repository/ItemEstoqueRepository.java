@@ -10,5 +10,5 @@ import java.util.List;
 
 public interface ItemEstoqueRepository extends JpaRepository<ItemEstoque, Long> {
 
-    List<ItemEstoque> findByQuiosque(Quiosque quiosque);
+    List<ItemEstoque> findByQuiosqueAndAtivoTrue(Quiosque quiosque);
 }

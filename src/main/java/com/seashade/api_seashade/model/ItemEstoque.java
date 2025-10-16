@@ -38,6 +38,9 @@ public class ItemEstoque {
     @Column(name = "custo_unitario")
     private BigDecimal custoUnitario; // Custo por kg/L/unidade
 
+    @Column(nullable = false)
+    private boolean ativo = true; // Todo item começa como ativo
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiosque_id", nullable = false)
     @JsonBackReference
@@ -58,6 +61,8 @@ public class ItemEstoque {
     public void setCustoUnitario(BigDecimal custoUnitario) { this.custoUnitario = custoUnitario; }
     public Quiosque getQuiosque() { return quiosque; }
     public void setQuiosque(Quiosque quiosque) { this.quiosque = quiosque; }
+    public boolean isAtivo() { return ativo; }
+    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 
 
 }

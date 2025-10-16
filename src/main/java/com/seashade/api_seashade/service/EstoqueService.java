@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.seashade.api_seashade.controller.dto.CreateItemComMovimentoDto;
 import com.seashade.api_seashade.controller.dto.CreateItemEstoqueDto;
 import com.seashade.api_seashade.model.ItemEstoque;
 import com.seashade.api_seashade.model.MovimentoEstoque;
@@ -41,7 +42,7 @@ public class EstoqueService {
     public List<ItemEstoque> listarItensEstoque(Long quiosqueId) {
         Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
-        return itemEstoqueRepository.findByQuiosque(quiosque);
+        return itemEstoqueRepository.findByQuiosqueAndAtivoTrue(quiosque);
     }
 
     public List<MovimentoEstoque> listarHistoricoMovimentacoes(Long quiosqueId) {
@@ -102,17 +103,39 @@ public class EstoqueService {
     }
 
     @Transactional
-    public void deletarItemEstoque(Long itemEstoqueId) {
-    ItemEstoque item = itemEstoqueRepository.findById(itemEstoqueId)
-            .orElseThrow(() -> new EntityNotFoundException("Item de estoque não encontrado com o ID: " + itemEstoqueId));
-    
-    // Opcional, mas recomendado: Adicionar uma verificação para não deletar itens que já têm histórico.
-    List<MovimentoEstoque> movimentos = movimentoEstoqueRepository.findByItemEstoqueOrderByDataMovimentoDesc(item);
-    if (!movimentos.isEmpty()) {
-        throw new IllegalStateException("Não é possível deletar um item que possui histórico de movimentações.");
+    public MovimentoEstoque criarItemComPrimeiroMovimento(Long quiosqueId, CreateItemComMovimentoDto dto, UUID usuarioId) {
+        Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
+
+        // 1. Cria o novo ItemEstoque
+        ItemEstoque novoItem = new ItemEstoque();
+        novoItem.setNome(dto.nome());
+        novoItem.setDescricao(dto.descricao());
+        novoItem.setUnidadeMedida(dto.unidadeMedida());
+        novoItem.setCustoUnitario(dto.custoUnitario());
+        novoItem.setQuantidadeAtual(BigDecimal.ZERO); // Começa com zero antes do primeiro movimento
+        novoItem.setQuiosque(quiosque);
+        ItemEstoque itemSalvo = itemEstoqueRepository.save(novoItem);
+
+        // 2. Registra a primeira movimentação de ENTRADA para este novo item
+        return registrarMovimentacao(
+            itemSalvo.getId(),
+            MovimentoEstoque.TipoMovimento.ENTRADA,
+            dto.quantidade(),
+            dto.motivo(),
+            dto.observacao(),
+            usuarioId
+        );
     }
-    
-    itemEstoqueRepository.delete(item);
+
+    @Transactional
+    public void desativarItemEstoque(Long itemEstoqueId) {
+        ItemEstoque item = itemEstoqueRepository.findById(itemEstoqueId)
+                .orElseThrow(() -> new EntityNotFoundException("Item de estoque não encontrado"));
+
+        item.setAtivo(false);
+        
+        itemEstoqueRepository.save(item);
     }
 
 }
