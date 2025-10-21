@@ -31,11 +31,9 @@ public class AdminUserConfig implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
         
-        // Busca pelas roles necessárias na inicialização
         var roleAdmin = roleRepository.findByName("ADMIN").orElseGet(() -> roleRepository.save(new Role("ADMIN")));
-        var roleBasic = roleRepository.findByName("BASIC").orElseGet(() -> roleRepository.save(new Role("BASIC")));
+        //var roleBasic = roleRepository.findByName("BASIC").orElseGet(() -> roleRepository.save(new Role("BASIC")));
 
-        // Verifica se o usuário admin já existe
         var userAdminOptional = userRepository.findByEmail("admin@seashade.com");
 
         // Cria o admin apenas se ele não existir
