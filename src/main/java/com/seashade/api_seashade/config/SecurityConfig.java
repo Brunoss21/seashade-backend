@@ -46,7 +46,7 @@ public class SecurityConfig {
     @Order(1) 
     public SecurityFilterChain publicEndpointsSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/auth/**") 
+                .securityMatcher("/api/auth/**", "/api/atendentes/login") 
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().permitAll() 
                 )

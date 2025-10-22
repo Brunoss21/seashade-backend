@@ -30,21 +30,37 @@ public class AdminUserConfig implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        
-        var roleAdmin = roleRepository.findByName("ADMIN").orElseGet(() -> roleRepository.save(new Role("ADMIN")));
-        //var roleBasic = roleRepository.findByName("BASIC").orElseGet(() -> roleRepository.save(new Role("BASIC")));
+
+        var roleAdmin = roleRepository.findByName("ADMIN")
+                .orElseGet(() -> {
+                    System.out.println("Criando role ADMIN...");
+                    return roleRepository.save(new Role("ADMIN"));
+                });
+
+
+        var roleBasic = roleRepository.findByName("BASIC")
+                .orElseGet(() -> {
+                    System.out.println("Criando role BASIC...");
+                    return roleRepository.save(new Role("BASIC"));
+                });
+
+        var roleAtendente = roleRepository.findByName("ATENDENTE")
+                .orElseGet(() -> {
+                    System.out.println("Criando role ATENDENTE...");
+                    return roleRepository.save(new Role("ATENDENTE"));
+                });
 
         var userAdminOptional = userRepository.findByEmail("admin@seashade.com");
 
         // Cria o admin apenas se ele não existir
         userAdminOptional.ifPresentOrElse(
-                user -> System.out.println("Admin já existente."),
+                user -> System.out.println("Usuário admin já existente."),
                 () -> {
                     var user = new User();
                     user.setName("Administrador");
                     user.setEmail("admin@seashade.com");
-                    user.setPassword(passwordEncoder.encode("0969"));
-                    user.setRoles(Set.of(roleAdmin));
+                    user.setPassword(passwordEncoder.encode("0969")); 
+                    user.setRoles(Set.of(roleAdmin)); 
                     userRepository.save(user);
                     System.out.println("Usuário admin criado com sucesso.");
                 }
