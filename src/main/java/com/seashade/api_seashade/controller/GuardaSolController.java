@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,5 +52,31 @@ public class GuardaSolController {
                                                          @RequestBody UpdateGuardaSolStatusDto dto) {
         GuardaSol guardaSolAtualizado = guardaSolService.mudarStatus(guardaSolId, dto.status());
         return ResponseEntity.ok(guardaSolAtualizado);
+    }
+
+    // Dentro da classe GuardaSolController.java
+
+    // DTO para receber a nova identificação
+    public record UpdateIdentificacaoDto(String identificacao) {}
+
+    // Endpoint para ATUALIZAR a identificação de um guarda-sol
+    // Ex: PUT /api/quiosques/{quiosqueId}/guardasois/{guardaSolId}
+    @PutMapping("/{guardaSolId}")
+    public ResponseEntity<GuardaSol> atualizarGuardaSol(
+            @PathVariable Long quiosqueId,
+            @PathVariable Long guardaSolId,
+            @RequestBody UpdateIdentificacaoDto dto) {
+        GuardaSol atualizado = guardaSolService.atualizarIdentificacao(guardaSolId, dto.identificacao());
+        return ResponseEntity.ok(atualizado);
+    }
+
+    // Endpoint para DESATIVAR (soft delete) um guarda-sol
+    // Ex: PATCH /api/quiosques/{quiosqueId}/guardasois/{guardaSolId}/desativar
+    @PatchMapping("/{guardaSolId}/desativar")
+    public ResponseEntity<Void> desativarGuardaSol(
+            @PathVariable Long quiosqueId,
+            @PathVariable Long guardaSolId) {
+        guardaSolService.desativarGuardaSol(guardaSolId);
+        return ResponseEntity.noContent().build();
     }
 }

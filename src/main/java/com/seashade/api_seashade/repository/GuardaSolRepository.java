@@ -9,10 +9,15 @@ import com.seashade.api_seashade.model.Quiosque;
 
 public interface GuardaSolRepository extends JpaRepository<GuardaSol, Long> {
 
+    /*
     // Método para buscar todos os guarda-sóis de um quiosque
     List<GuardaSol> findByQuiosque(Quiosque quiosque);
 
     // Método para buscar apenas os guarda-sóis livres ou ocupados de um quiosque
     List<GuardaSol> findByQuiosqueAndStatus(Quiosque quiosque, GuardaSol.StatusGuardaSol status);
 
+    */
+    
+    List<GuardaSol> findByQuiosqueAndAtivoTrue(Quiosque quiosque); // Só ativos
+    List<GuardaSol> findByQuiosqueAndStatusAndAtivoTrue(Quiosque quiosque, GuardaSol.StatusGuardaSol status);
 }

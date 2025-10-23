@@ -20,4 +20,6 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     // Método útil para encontrar a comanda ABERTA para um guarda-sol específico
     Optional<Comanda> findByGuardaSolAndStatus(GuardaSol guardaSol, Comanda.StatusComanda status);
 
+    long countByQuiosque(Quiosque quiosque);
+
 }

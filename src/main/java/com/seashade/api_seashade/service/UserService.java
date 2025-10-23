@@ -41,8 +41,8 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.password()));
         /*var basicRole = roleRepository.findByName(Role.Values.BASIC.name());*/
         var basicRole = roleRepository.findByName("BASIC")
-        .orElseThrow(() -> new RuntimeException("Erro: Role 'BASIC' não encontrada."));
-        user.setRoles(Set.of(basicRole));
+            .orElseThrow(() -> new RuntimeException("Erro: Role 'BASIC' não encontrada.")); // <-- CORREÇÃO
+            user.setRoles(Set.of(basicRole));
         var savedUser = userRepository.save(user);
 
         var quiosque = new Quiosque(dto.quiosque(), savedUser);

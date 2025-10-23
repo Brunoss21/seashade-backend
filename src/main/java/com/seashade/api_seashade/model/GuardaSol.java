@@ -30,6 +30,9 @@ public class GuardaSol {
     @Column(nullable = false)
     private StatusGuardaSol status;
 
+    @Column(nullable = false)
+    private boolean ativo = true; 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiosque_id", nullable = false)
     private Quiosque quiosque;
@@ -48,5 +51,7 @@ public class GuardaSol {
     public void setStatus(StatusGuardaSol status) { this.status = status; }
     public Quiosque getQuiosque() { return quiosque; }
     public void setQuiosque(Quiosque quiosque) { this.quiosque = quiosque; }
+    public boolean isAtivo() { return ativo; }
+    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 
 }
