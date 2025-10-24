@@ -29,7 +29,6 @@ public class ComandaController {
 
     public record OpenComandaRequestDto(Long guardaSolId) {}
 
-    // --- CORREÇÃO 1: Retorna ComandaResponseDto ---
     @PostMapping
     public ResponseEntity<ComandaResponseDto> abrirNovaComanda(@RequestBody OpenComandaRequestDto requestDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -40,11 +39,9 @@ public class ComandaController {
 
         Comanda novaComanda = comandaService.abrirComanda(requestDto.guardaSolId(), principalId, scope);
 
-        // Converte a entidade para DTO antes de retornar
         return ResponseEntity.status(HttpStatus.CREATED).body(new ComandaResponseDto(novaComanda));
     }
 
-    // --- CORREÇÃO 2: Retorna ItemPedidoResponseDto ---
     @PostMapping("/{comandaId}/itens")
     public ResponseEntity<ItemPedidoResponseDto> adicionarItemNaComanda(
             @PathVariable Long comandaId,
@@ -60,7 +57,6 @@ public class ComandaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new ItemPedidoResponseDto(novoItem));
     }
 
-    // --- CORREÇÃO 3: Retorna ComandaResponseDto ---
     @GetMapping("/{comandaId}")
     public ResponseEntity<ComandaResponseDto> buscarComanda(@PathVariable Long comandaId) {
         Comanda comanda = comandaService.buscarComandaPorId(comandaId);
@@ -69,7 +65,6 @@ public class ComandaController {
         return ResponseEntity.ok(new ComandaResponseDto(comanda));
     }
 
-    // Método de listagem (já estava correto)
     @GetMapping
     public ResponseEntity<List<ComandaResponseDto>> listarComandas( 
             @RequestParam Long quiosqueId,
@@ -82,6 +77,18 @@ public class ComandaController {
                 .collect(Collectors.toList());
                 
         return ResponseEntity.ok(comandasDto); 
+    }
+
+    @PatchMapping("/{id}/finalizar")
+    public ResponseEntity<Comanda> finalizarComanda(@PathVariable Long id) {
+        Comanda comandaAtualizada = comandaService.finalizarComanda(id);
+        return ResponseEntity.ok(comandaAtualizada);
+    }
+
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<Comanda> cancelarComanda(@PathVariable Long id) {
+        Comanda comandaCancelada = comandaService.cancelarComanda(id);
+        return ResponseEntity.ok(comandaCancelada);
     }
 }
 

@@ -2,6 +2,7 @@ package com.seashade.api_seashade.model;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
@@ -25,6 +26,7 @@ public class ItemPedido {
     // Muitos Itens pertencem a uma Comanda
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comanda_id", nullable = false)
+    @JsonBackReference
     private Comanda comanda;
 
     // Muitos Itens se referem a um Produto
