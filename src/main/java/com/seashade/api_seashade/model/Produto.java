@@ -40,7 +40,9 @@ public class Produto {
     public enum CategoriaProduto {
         BEBIDA_ALCOOLICA,
         PORCAO,
-        BEBIDA
+        BEBIDA,
+        SALGADOS, 
+        SOBREMESAS
     }
 
     private Integer estoque;

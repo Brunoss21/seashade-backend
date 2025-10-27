@@ -24,4 +24,16 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
 
     long countByQuiosque(Quiosque quiosque);
 
+    @Query("SELECT c FROM Comanda c LEFT JOIN FETCH c.itens i LEFT JOIN FETCH i.produto p WHERE c.id = :comandaId")
+    Optional<Comanda> findByIdWithItensAndProdutos(@Param("comandaId") Long comandaId);
+
+    /**
+     * Busca comandas de um quiosque que estejam em qualquer um dos status fornecidos,
+     * ordenadas pela data de abertura descendente.
+     */
+    List<Comanda> findByQuiosqueAndStatusInOrderByDataAberturaDesc(Quiosque quiosque, List<Comanda.StatusComanda> statuses);
+
+    // --- Opcional (para verificação no cancelarComanda) ---
+    // boolean existsByGuardaSolAndStatusIn(GuardaSol guardaSol, List<Comanda.StatusComanda> statuses);
+
 }

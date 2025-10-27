@@ -20,7 +20,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -34,7 +33,7 @@ public class Comanda {
     @Column(name = "numero_comanda", unique = true)
     private String numeroComanda;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guarda_sol_id", nullable = false)
     private GuardaSol guardaSol;
 
@@ -63,12 +62,15 @@ public class Comanda {
     private List<ItemPedido> itens = new ArrayList<>();
 
     public enum StatusComanda {
-        ABERTA,
-        FECHADA,
-        CANCELADA
+        ABERTA,           // Garçom adicionando itens
+        NA_COZINHA,       // Enviado para cozinha, aguardando início
+        EM_PREPARO,       // Cozinha iniciou o preparo
+        PRONTO_PARA_ENTREGA, // Cozinha finalizou, aguardando entrega do garçom
+        FECHADA,          // Cliente pagou
+        CANCELADA         // Pedido cancelado
     }
 
-    // --- Getters e Setters (incluindo os novos) ---
+    // --- Getters e Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNumeroComanda() { return numeroComanda; }

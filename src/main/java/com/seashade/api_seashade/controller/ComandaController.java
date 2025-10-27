@@ -27,22 +27,23 @@ public class ComandaController {
         this.comandaService = comandaService;
     }
 
+    // ... (Endpoint POST / para abrir comanda) ...
     public record OpenComandaRequestDto(Long guardaSolId) {}
-
     @PostMapping
     public ResponseEntity<ComandaResponseDto> abrirNovaComanda(@RequestBody OpenComandaRequestDto requestDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String principalId = authentication.getName(); 
+        String principalId = authentication.getName();
         String scope = authentication.getAuthorities().stream()
                                   .map(GrantedAuthority::getAuthority)
-                                  .collect(Collectors.joining(" ")); 
+                                  .collect(Collectors.joining(" "));
 
         Comanda novaComanda = comandaService.abrirComanda(requestDto.guardaSolId(), principalId, scope);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(new ComandaResponseDto(novaComanda));
     }
 
-    @PostMapping("/{comandaId}/itens")
+
+    // ... (Endpoint POST /{comandaId}/itens para adicionar item) ...
+     @PostMapping("/{comandaId}/itens")
     public ResponseEntity<ItemPedidoResponseDto> adicionarItemNaComanda(
             @PathVariable Long comandaId,
             @RequestBody AddItemRequestDto requestDto) {
@@ -52,44 +53,67 @@ public class ComandaController {
             requestDto.produtoId(),
             requestDto.quantidade()
         );
-
-        // Converte a entidade para DTO antes de retornar
         return ResponseEntity.status(HttpStatus.CREATED).body(new ItemPedidoResponseDto(novoItem));
     }
 
+
+    // ... (Endpoint GET /{comandaId} para buscar comanda) ...
     @GetMapping("/{comandaId}")
     public ResponseEntity<ComandaResponseDto> buscarComanda(@PathVariable Long comandaId) {
         Comanda comanda = comandaService.buscarComandaPorId(comandaId);
-        
-        // Converte a entidade para DTO antes de retornar
         return ResponseEntity.ok(new ComandaResponseDto(comanda));
     }
 
+    // --- ENDPOINT AJUSTADO ---
     @GetMapping
-    public ResponseEntity<List<ComandaResponseDto>> listarComandas( 
+    public ResponseEntity<List<ComandaResponseDto>> listarComandas(
             @RequestParam Long quiosqueId,
-            @RequestParam(required = false) Comanda.StatusComanda status
+            // Aceita uma lista de status separados por vírgula (ex: status=NA_COZINHA,EM_PREPARO)
+            @RequestParam(required = false) List<Comanda.StatusComanda> status
     ) {
         List<Comanda> comandasEntidades = comandaService.listarComandasPorQuiosque(quiosqueId, status);
-        
+
         List<ComandaResponseDto> comandasDto = comandasEntidades.stream()
-                .map(ComandaResponseDto::new) 
+                .map(ComandaResponseDto::new)
                 .collect(Collectors.toList());
-                
-        return ResponseEntity.ok(comandasDto); 
+
+        return ResponseEntity.ok(comandasDto);
     }
 
-    @PatchMapping("/{id}/finalizar")
-    public ResponseEntity<Comanda> finalizarComanda(@PathVariable Long id) {
+    // --- ENDPOINT AJUSTADO/RENOMEADO ---
+    @PatchMapping("/{comandaId}/enviar-cozinha")
+    public ResponseEntity<ComandaResponseDto> enviarCozinha(@PathVariable Long comandaId) {
+        Comanda comandaAtualizada = comandaService.enviarParaCozinha(comandaId);
+        return ResponseEntity.ok(new ComandaResponseDto(comandaAtualizada));
+    }
+
+    // --- NOVO ENDPOINT ---
+    @PatchMapping("/{comandaId}/marcar-em-preparo")
+    public ResponseEntity<ComandaResponseDto> marcarEmPreparo(@PathVariable Long comandaId) {
+        Comanda comandaAtualizada = comandaService.marcarComandaEmPreparo(comandaId);
+        return ResponseEntity.ok(new ComandaResponseDto(comandaAtualizada));
+    }
+
+    // --- NOVO ENDPOINT ---
+    @PatchMapping("/{comandaId}/marcar-pronta")
+    public ResponseEntity<ComandaResponseDto> marcarPronta(@PathVariable Long comandaId) {
+        Comanda comandaAtualizada = comandaService.marcarComandaPronta(comandaId);
+        return ResponseEntity.ok(new ComandaResponseDto(comandaAtualizada));
+    }
+
+    // ... (Endpoints /finalizar e /cancelar - ajustados no service) ...
+     @PatchMapping("/{id}/finalizar")
+    public ResponseEntity<ComandaResponseDto> finalizarComanda(@PathVariable Long id) { // Retorna DTO
         Comanda comandaAtualizada = comandaService.finalizarComanda(id);
-        return ResponseEntity.ok(comandaAtualizada);
+        return ResponseEntity.ok(new ComandaResponseDto(comandaAtualizada)); // Retorna DTO
     }
 
     @PatchMapping("/{id}/cancelar")
-    public ResponseEntity<Comanda> cancelarComanda(@PathVariable Long id) {
+    public ResponseEntity<ComandaResponseDto> cancelarComanda(@PathVariable Long id) { // Retorna DTO
         Comanda comandaCancelada = comandaService.cancelarComanda(id);
-        return ResponseEntity.ok(comandaCancelada);
+        return ResponseEntity.ok(new ComandaResponseDto(comandaCancelada)); // Retorna DTO
     }
-}
+
+} // Fim da classe ComandaController
 
 
