@@ -1,5 +1,6 @@
 package com.seashade.api_seashade.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,5 +36,11 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
 
     // --- Opcional (para verificação no cancelarComanda) ---
     // boolean existsByGuardaSolAndStatusIn(GuardaSol guardaSol, List<Comanda.StatusComanda> statuses);
+
+    // Busca comandas fechadas em um período específico para um quiosque
+    List<Comanda> findByQuiosqueIdAndStatusAndDataFechamentoBetween(Long quiosqueId, Comanda.StatusComanda status, LocalDateTime inicio, LocalDateTime fim);
+
+    // Busca comandas fechadas, com atendente, em um período específico para um quiosque
+    List<Comanda> findByQuiosqueIdAndStatusAndAtendenteIsNotNullAndDataFechamentoBetween(Long quiosqueId, Comanda.StatusComanda status, LocalDateTime inicio, LocalDateTime fim);
 
 }
