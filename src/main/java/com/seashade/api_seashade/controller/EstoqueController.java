@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import org.slf4j.Logger; 
+import org.slf4j.LoggerFactory; 
 
 import com.seashade.api_seashade.controller.dto.CreateItemComMovimentoDto;
 import com.seashade.api_seashade.controller.dto.CreateItemEstoqueDto;
@@ -33,6 +37,8 @@ public class EstoqueController {
     private final EstoqueService estoqueService;
     private final UserRepository userRepository;
 
+    private static final Logger logger = LoggerFactory.getLogger(EstoqueController.class);
+
     public EstoqueController(EstoqueService estoqueService, UserRepository userRepository) {
         this.estoqueService = estoqueService;
         this.userRepository = userRepository;
@@ -45,28 +51,33 @@ public class EstoqueController {
         return ResponseEntity.ok(itens);
     }
 
-    // Endpoint para REGISTRAR uma nova movimentação (do seu modal "Adicionar item ao estoque")
+    // Endpoint para REGISTRAR uma nova movimentação 
     @PostMapping("/movimentacoes")
     public ResponseEntity<MovimentoEstoque> registrarMovimentacao(@PathVariable Long quiosqueId, @RequestBody CreateMovimentoDto dto) {
-        // --- 5. A CORREÇÃO ESTÁ AQUI ---
-        
-        // Pega o email do usuário a partir do token JWT
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-        
-        // Busca o usuário no banco pelo email para obter o ID real
-        User usuario = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário do token não encontrado no banco"));
-        
-        UUID usuarioId = usuario.getUserId(); // Pega o UUID do usuário encontrado
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userIdString = authentication.getName(); 
+
+        UUID usuarioId; 
+        try {
+            usuarioId = UUID.fromString(userIdString); 
+        } catch (IllegalArgumentException e) {
+            logger.error("ID do usuário no token não é um UUID válido: '{}'", userIdString);
+            throw new BadCredentialsException("Token de usuário inválido.");
+        }
+
+        logger.info("Tentando encontrar usuário pelo ID do token para movimentação: '{}'", usuarioId);
+
+        User usuario = userRepository.findById(usuarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário do token (ID: " + usuarioId + ") não encontrado no banco"));
+     
         MovimentoEstoque novoMovimento = estoqueService.registrarMovimentacao(
-            dto.itemEstoqueId(),
-            dto.tipoMovimento(),
-            dto.quantidade(),
-            dto.motivo(),
-            dto.observacao(),
-            usuarioId // Passa o UUID correto para o service
+                dto.itemEstoqueId(),
+                dto.tipoMovimento(),
+                dto.quantidade(),
+                dto.motivo(),
+                dto.observacao(),
+                usuarioId 
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(novoMovimento);
     }
@@ -86,14 +97,24 @@ public class EstoqueController {
 
     @PostMapping("/novo-com-movimento")
     public ResponseEntity<MovimentoEstoque> criarItemComMovimento(@PathVariable Long quiosqueId, @RequestBody CreateItemComMovimentoDto dto) {
-        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        User usuario = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário do token não encontrado no banco"));
-        UUID usuarioId = usuario.getUserId();
-        MovimentoEstoque movimentoInicial = estoqueService.criarItemComPrimeiroMovimento(quiosqueId, dto, usuarioId);
-        
+        String userIdString = SecurityContextHolder.getContext().getAuthentication().getName(); 
+
+        UUID usuarioId; 
+        try {
+            usuarioId = UUID.fromString(userIdString);
+        } catch (IllegalArgumentException e) {
+            logger.error("ID do usuário no token não é um UUID válido: '{}'", userIdString);
+            throw new BadCredentialsException("Token de usuário inválido."); 
+        }
+
+        logger.info("Tentando encontrar usuário pelo ID do token: '{}'", usuarioId);
+
+        User usuario = userRepository.findById(usuarioId) 
+                .orElseThrow(() -> new EntityNotFoundException("Usuário do token (ID: " + usuarioId + ") não encontrado no banco"));
+
+        MovimentoEstoque movimentoInicial = estoqueService.criarItemComPrimeiroMovimento(quiosqueId, dto, usuarioId); 
+
         return ResponseEntity.status(HttpStatus.CREATED).body(movimentoInicial);
-    
     }
 
     @PatchMapping("/{itemEstoqueId}/desativar")
