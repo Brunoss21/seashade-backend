@@ -2,7 +2,7 @@ package com.seashade.api_seashade.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,7 +29,7 @@ public class Despesa {
     private BigDecimal valor;
 
     @Column(nullable = false)
-    private LocalDate dataDespesa; // Ou LocalDateTime se precisar da hora
+    private LocalDate dataDespesa;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiosque_id", nullable = false)

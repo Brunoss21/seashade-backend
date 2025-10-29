@@ -100,8 +100,6 @@ public class ComandaService {
         return comandaSalva;
     }
 
-    // ... (Métodos abrirComanda, adicionarItem (sem statusItem), buscarComandaPorId, listarComandasPorQuiosque) ...
-    // Método adicionarItem ajustado (remover setStatusItem se existia)
     @Transactional
     public ItemPedido adicionarItem(Long comandaId, Long produtoId, Integer quantidade) {
         Comanda comanda = comandaRepository.findById(comandaId)

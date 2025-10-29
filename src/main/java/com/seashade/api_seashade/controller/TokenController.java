@@ -28,7 +28,6 @@ public class TokenController {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AtendenteRepository atendenteRepository; 
 
-    // 2. ATUALIZAR O CONSTRUTOR
     public TokenController(JwtEncoder jwtEncoder,
                            UserRepository userRepository,
                            BCryptPasswordEncoder bCryptPasswordEncoder,

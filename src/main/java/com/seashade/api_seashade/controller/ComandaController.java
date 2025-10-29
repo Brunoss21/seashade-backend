@@ -64,7 +64,6 @@ public class ComandaController {
         return ResponseEntity.ok(new ComandaResponseDto(comanda));
     }
 
-    // --- ENDPOINT AJUSTADO ---
     @GetMapping
     public ResponseEntity<List<ComandaResponseDto>> listarComandas(
             @RequestParam Long quiosqueId,
@@ -80,28 +79,24 @@ public class ComandaController {
         return ResponseEntity.ok(comandasDto);
     }
 
-    // --- ENDPOINT AJUSTADO/RENOMEADO ---
     @PatchMapping("/{comandaId}/enviar-cozinha")
     public ResponseEntity<ComandaResponseDto> enviarCozinha(@PathVariable Long comandaId) {
         Comanda comandaAtualizada = comandaService.enviarParaCozinha(comandaId);
         return ResponseEntity.ok(new ComandaResponseDto(comandaAtualizada));
     }
 
-    // --- NOVO ENDPOINT ---
     @PatchMapping("/{comandaId}/marcar-em-preparo")
     public ResponseEntity<ComandaResponseDto> marcarEmPreparo(@PathVariable Long comandaId) {
         Comanda comandaAtualizada = comandaService.marcarComandaEmPreparo(comandaId);
         return ResponseEntity.ok(new ComandaResponseDto(comandaAtualizada));
     }
 
-    // --- NOVO ENDPOINT ---
     @PatchMapping("/{comandaId}/marcar-pronta")
     public ResponseEntity<ComandaResponseDto> marcarPronta(@PathVariable Long comandaId) {
         Comanda comandaAtualizada = comandaService.marcarComandaPronta(comandaId);
         return ResponseEntity.ok(new ComandaResponseDto(comandaAtualizada));
     }
 
-    // ... (Endpoints /finalizar e /cancelar - ajustados no service) ...
      @PatchMapping("/{id}/finalizar")
     public ResponseEntity<ComandaResponseDto> finalizarComanda(@PathVariable Long id) { // Retorna DTO
         Comanda comandaAtualizada = comandaService.finalizarComanda(id);
@@ -114,6 +109,6 @@ public class ComandaController {
         return ResponseEntity.ok(new ComandaResponseDto(comandaCancelada)); // Retorna DTO
     }
 
-} // Fim da classe ComandaController
+} 
 
 

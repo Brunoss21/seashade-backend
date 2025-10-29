@@ -28,5 +28,4 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
     
-    //  método de LOGIN também deve ficar aqui
 }

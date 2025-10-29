@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
 
         Map<String, String> response = Map.of(
             "message", "Ocorreu um erro interno inesperado no servidor.",
-            "error", ex.getClass().getName() // Nos diz o tipo exato da exceção
+            "error", ex.getClass().getName() 
         );
         
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
