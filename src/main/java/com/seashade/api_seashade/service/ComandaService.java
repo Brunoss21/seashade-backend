@@ -221,7 +221,7 @@ public class ComandaService {
         if (comanda.getDataFechamento() == null) {
             comanda.setDataFechamento(LocalDateTime.now());
         }
-
+        /*
         GuardaSol guardaSol = comanda.getGuardaSol();
         // Libera o guarda-sol apenas se a comanda ainda o estava ocupando
         // (pode já ter sido liberado por outra lógica, embora improvável aqui)
@@ -234,7 +234,7 @@ public class ComandaService {
                  guardaSolRepository.save(guardaSol);
              // }
         }
-
+        */
         return comandaRepository.save(comanda);
     }
 

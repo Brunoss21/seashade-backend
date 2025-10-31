@@ -67,7 +67,6 @@ public class ComandaController {
     @GetMapping
     public ResponseEntity<List<ComandaResponseDto>> listarComandas(
             @RequestParam Long quiosqueId,
-            // Aceita uma lista de status separados por vírgula (ex: status=NA_COZINHA,EM_PREPARO)
             @RequestParam(required = false) List<Comanda.StatusComanda> status
     ) {
         List<Comanda> comandasEntidades = comandaService.listarComandasPorQuiosque(quiosqueId, status);

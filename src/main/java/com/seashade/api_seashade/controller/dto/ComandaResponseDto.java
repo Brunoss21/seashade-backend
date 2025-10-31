@@ -15,7 +15,6 @@ public record ComandaResponseDto(
     BigDecimal valorTotal,
     GuardaSolSimpleDto guardaSol, 
     List<ItemPedidoResponseDto> itens
-    // String nomeAtendente; // Poderia adicionar se necessário
 ) {
     // Construtor para conversão
     public ComandaResponseDto(Comanda comanda) {
