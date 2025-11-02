@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/relatorios")
-// TODO: Adicionar segurança para garantir que o usuário só acesse dados do seu quiosque
+@RequestMapping("/api/quiosques/{quiosqueId}/relatorios") // Rota base para relatórios
 public class RelatorioController {
 
     private final RelatorioService relatorioService;
@@ -21,55 +21,52 @@ public class RelatorioController {
 
     @GetMapping("/vendas-diarias")
     public ResponseEntity<List<VendasDiariasDto>> getVendasDiarias(
-            @RequestParam Long quiosqueId,
-            @RequestParam(defaultValue = "7") int dias) { // Padrão para os últimos 7 dias
-        // TODO: Validar se quiosqueId pertence ao usuário autenticado
-        List<VendasDiariasDto> dados = relatorioService.getVendasDiarias(quiosqueId, dias);
-        return ResponseEntity.ok(dados);
+            @PathVariable Long quiosqueId,
+            @RequestParam(defaultValue = "7") int dias) { // Padrão de 7 dias
+        return ResponseEntity.ok(relatorioService.getVendasDiarias(quiosqueId, dias));
     }
 
     @GetMapping("/faturamento-mensal")
     public ResponseEntity<List<FaturamentoMensalDto>> getFaturamentoMensal(
-            @RequestParam Long quiosqueId,
-            @RequestParam(required = false) Integer ano) {
-        // TODO: Validar se quiosqueId pertence ao usuário autenticado
-        int anoAtual = (ano != null) ? ano : LocalDate.now().getYear(); // Usa ano atual se não fornecido
-        List<FaturamentoMensalDto> dados = relatorioService.getFaturamentoMensal(quiosqueId, anoAtual);
-        return ResponseEntity.ok(dados);
+            @PathVariable Long quiosqueId,
+            @RequestParam(defaultValue = "0") int ano) {
+        // Usa o ano atual se '0' ou não fornecido
+        int anoBusca = (ano == 0) ? LocalDate.now().getYear() : ano;
+        return ResponseEntity.ok(relatorioService.getFaturamentoMensal(quiosqueId, anoBusca));
     }
 
     @GetMapping("/receita-despesa-mensal")
     public ResponseEntity<List<ReceitaDespesaMensalDto>> getReceitaDespesaMensal(
-            @RequestParam Long quiosqueId,
-            @RequestParam(required = false) Integer ano) {
-        // TODO: Validar se quiosqueId pertence ao usuário autenticado
-        int anoAtual = (ano != null) ? ano : LocalDate.now().getYear();
-        List<ReceitaDespesaMensalDto> dados = relatorioService.getReceitaDespesaMensal(quiosqueId, anoAtual);
-        return ResponseEntity.ok(dados);
+            @PathVariable Long quiosqueId,
+            @RequestParam(defaultValue = "0") int ano) {
+        int anoBusca = (ano == 0) ? LocalDate.now().getYear() : ano;
+        return ResponseEntity.ok(relatorioService.getReceitaDespesaMensal(quiosqueId, anoBusca));
     }
 
     @GetMapping("/vendas-compras-mensal")
     public ResponseEntity<List<VendasComprasMensalDto>> getVendasComprasMensal(
-            @RequestParam Long quiosqueId,
-            @RequestParam(required = false) Integer ano) {
-        // TODO: Validar se quiosqueId pertence ao usuário autenticado
-        int anoAtual = (ano != null) ? ano : LocalDate.now().getYear();
-        List<VendasComprasMensalDto> dados = relatorioService.getVendasComprasMensal(quiosqueId, anoAtual);
-        return ResponseEntity.ok(dados);
+            @PathVariable Long quiosqueId,
+            @RequestParam(defaultValue = "0") int ano) {
+        int anoBusca = (ano == 0) ? LocalDate.now().getYear() : ano;
+        return ResponseEntity.ok(relatorioService.getVendasComprasMensal(quiosqueId, anoBusca));
     }
 
-     @GetMapping("/pedidos-por-atendente")
-    public ResponseEntity<List<PedidosPorAtendenteDto>> getPedidosPorAtendente(
-            @RequestParam Long quiosqueId,
-            @RequestParam(required = false) Integer ano,
-            @RequestParam(required = false) Integer mes) {
-        // TODO: Validar se quiosqueId pertence ao usuário autenticado
-        LocalDate hoje = LocalDate.now();
-        int anoAtual = (ano != null) ? ano : hoje.getYear();
-        int mesAtual = (mes != null) ? mes : hoje.getMonthValue(); // Usa mes atual se não fornecido
+    @GetMapping("/pedidos-por-atendente-mensal") 
+    public ResponseEntity<List<Map<String, Object>>> getPedidosPorAtendenteMensal(
+            @PathVariable Long quiosqueId,
+            @RequestParam(defaultValue = "0") int ano) {
+        
+        int anoBusca = (ano == 0) ? LocalDate.now().getYear() : ano;
 
-        List<PedidosPorAtendenteDto> dados = relatorioService.getPedidosPorAtendente(quiosqueId, anoAtual, mesAtual);
-        return ResponseEntity.ok(dados);
+        return ResponseEntity.ok(relatorioService.getPedidosPorAtendenteMensal(quiosqueId, anoBusca));
     }
 
+    @GetMapping("/pedidos-mensais")
+    public ResponseEntity<List<PedidosMensaisDto>> getPedidosMensais(
+            @PathVariable Long quiosqueId,
+            @RequestParam(defaultValue = "0") int ano) {
+        
+        int anoBusca = (ano == 0) ? LocalDate.now().getYear() : ano;
+        return ResponseEntity.ok(relatorioService.getPedidosMensais(quiosqueId, anoBusca));
+    }
 }

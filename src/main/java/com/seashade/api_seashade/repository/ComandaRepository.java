@@ -44,6 +44,7 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     // Busca comandas fechadas, com atendente, em um período específico para um quiosque
     List<Comanda> findByQuiosqueIdAndStatusAndAtendenteIsNotNullAndDataFechamentoBetween(Long quiosqueId, Comanda.StatusComanda status, LocalDateTime inicio, LocalDateTime fim);
 
+    
     boolean existsByAtendenteAndStatusIn(Atendente atendente, List<Comanda.StatusComanda> status);
 
     boolean existsByGuardaSolAndStatusInAndIdNot(GuardaSol guardaSol, List<Comanda.StatusComanda> statuses, Long comandaIdToExclude);

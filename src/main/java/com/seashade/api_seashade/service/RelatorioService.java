@@ -3,6 +3,7 @@ package com.seashade.api_seashade.service;
 import com.seashade.api_seashade.controller.dto.relatorios.*;
 import com.seashade.api_seashade.model.Comanda;
 import com.seashade.api_seashade.model.Despesa;
+import com.seashade.api_seashade.model.Atendente;
 import com.seashade.api_seashade.repository.AtendenteRepository;
 import com.seashade.api_seashade.repository.ComandaRepository;
 import com.seashade.api_seashade.repository.DespesaRepository;
@@ -28,7 +29,7 @@ public class RelatorioService {
 
     private static final Locale LOCALE_BR = new Locale.Builder().setLanguage("pt").setRegion("BR").build(); 
     private static final DateTimeFormatter MES_FORMATTER = DateTimeFormatter.ofPattern("MMM", LOCALE_BR);
-    private static final TextStyle DIA_SEMANA_STYLE = null;
+    private static final TextStyle DIA_SEMANA_STYLE = TextStyle.SHORT;
 
 
     public RelatorioService(ComandaRepository comandaRepository,
@@ -187,5 +188,75 @@ public class RelatorioService {
                 })
                 .sorted(Comparator.comparingLong(PedidosPorAtendenteDto::quantidade).reversed()) 
                 .collect(Collectors.toList());
+    }
+
+    public List<Map<String, Object>> getPedidosPorAtendenteMensal(Long quiosqueId, int ano) {
+        LocalDateTime inicioAno = LocalDateTime.of(ano, 1, 1, 0, 0);
+        LocalDateTime fimAno = LocalDateTime.of(ano, 12, 31, 23, 59, 59);
+
+        // 1. Busca todas as comandas relevantes do ano
+        List<Comanda> comandasFechadas = comandaRepository.findByQuiosqueIdAndStatusAndAtendenteIsNotNullAndDataFechamentoBetween(
+                quiosqueId, Comanda.StatusComanda.FECHADA, inicioAno, fimAno);
+
+        // 2. Cria um conjunto com todos os atendentes que fizeram vendas
+        Set<Atendente> atendentes = comandasFechadas.stream()
+                                    .map(Comanda::getAtendente)
+                                    .collect(Collectors.toSet());
+
+        // 3. Agrupa os dados por Mês, e depois por Nome do Atendente, e conta
+        Map<Month, Map<String, Long>> dadosAgrupados = comandasFechadas.stream()
+            .collect(Collectors.groupingBy(
+                c -> c.getDataFechamento().getMonth(), // Chave Externa: Mês (JAN, FEV...)
+                Collectors.groupingBy(
+                    c -> c.getAtendente().getNome(), // Chave Interna: Nome ("Bruno", "Ana"...)
+                    Collectors.counting() // Valor: Contagem (10, 12...)
+                )
+            ));
+
+        // 4. Formata a saída para a lista de Mapas que o Recharts espera
+        List<Map<String, Object>> resultadoFormatado = new ArrayList<>();
+
+        for (Month mes : Month.values()) { // Itera de JAN a DEZ
+            Map<String, Object> entryMes = new LinkedHashMap<>();
+            // Adiciona a coluna "mes" (ex: "Jan", "Fev")
+            entryMes.put("mes", mes.getDisplayName(TextStyle.SHORT, LOCALE_BR)); 
+            
+            // Pega o mapa de vendas daquele mês (ou um mapa vazio se não houver vendas)
+            Map<String, Long> dadosDoMes = dadosAgrupados.getOrDefault(mes, Collections.emptyMap());
+
+            // Adiciona uma coluna para cada atendente (ex: "Bruno": 10)
+            for (Atendente atendente : atendentes) {
+                entryMes.put(atendente.getNome(), dadosDoMes.getOrDefault(atendente.getNome(), 0L));
+            }
+            
+            resultadoFormatado.add(entryMes);
+        }
+
+        return resultadoFormatado;
+    }
+
+    // --- MÉTODO: Pedidos Totais por Mês ---
+    public List<PedidosMensaisDto> getPedidosMensais(Long quiosqueId, int ano) {
+        LocalDateTime inicioAno = LocalDateTime.of(ano, 1, 1, 0, 0);
+        LocalDateTime fimAno = LocalDateTime.of(ano, 12, 31, 23, 59, 59);
+
+        // 1. Busca as mesmas comandas de faturamento
+        List<Comanda> comandasFechadas = comandaRepository.findByQuiosqueIdAndStatusAndDataFechamentoBetween(
+                quiosqueId, Comanda.StatusComanda.FECHADA, inicioAno, fimAno);
+
+        // 2. Agrupa por Mês e CONTA as ocorrências
+        Map<Month, Long> pedidosPorMes = comandasFechadas.stream()
+                .filter(c -> c.getDataFechamento() != null)
+                .collect(Collectors.groupingBy(
+                        c -> c.getDataFechamento().getMonth(), // Agrupa por Month Enum
+                        Collectors.counting() // <-- ÚNICA MUDANÇA LÓGICA (em vez de somar valorTotal)
+                ));
+
+        // 3. Cria os DTOs
+        return Arrays.stream(Month.values()) // Itera de JAN a DEZ
+                     .map(mes -> new PedidosMensaisDto(
+                             mes.getDisplayName(TextStyle.SHORT, LOCALE_BR), // "Jan", "Fev"...
+                             pedidosPorMes.getOrDefault(mes, 0L))) // Pega a contagem ou 0
+                     .collect(Collectors.toList());
     }
 }
