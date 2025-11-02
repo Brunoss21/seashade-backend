@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.seashade.api_seashade.model.Atendente;
 import com.seashade.api_seashade.model.Comanda;
 import com.seashade.api_seashade.model.GuardaSol;
 import com.seashade.api_seashade.model.Quiosque;
@@ -43,4 +44,7 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     // Busca comandas fechadas, com atendente, em um período específico para um quiosque
     List<Comanda> findByQuiosqueIdAndStatusAndAtendenteIsNotNullAndDataFechamentoBetween(Long quiosqueId, Comanda.StatusComanda status, LocalDateTime inicio, LocalDateTime fim);
 
+    boolean existsByAtendenteAndStatusIn(Atendente atendente, List<Comanda.StatusComanda> status);
+
+    boolean existsByGuardaSolAndStatusInAndIdNot(GuardaSol guardaSol, List<Comanda.StatusComanda> statuses, Long comandaIdToExclude);
 }

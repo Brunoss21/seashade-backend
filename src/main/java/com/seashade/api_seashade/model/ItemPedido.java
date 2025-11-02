@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -40,6 +42,9 @@ public class ItemPedido {
     @Column(name = "preco_unitario", nullable = false)
     private BigDecimal precoUnitario; // Armazena o preço do produto no momento da venda
 
+    @Enumerated(EnumType.STRING)
+    private StatusItem status;
+
     // --- Getters e Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -51,5 +56,7 @@ public class ItemPedido {
     public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
     public BigDecimal getPrecoUnitario() { return precoUnitario; }
     public void setPrecoUnitario(BigDecimal precoUnitario) { this.precoUnitario = precoUnitario; }
-
+    public StatusItem getStatus() { return status; }
+    public void setStatus(StatusItem status) { this.status = status; }
+    
 }

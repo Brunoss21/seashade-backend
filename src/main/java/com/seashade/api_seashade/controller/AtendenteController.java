@@ -33,4 +33,14 @@ public class AtendenteController {
         // Retorna a lista na resposta
         return ResponseEntity.ok(atendentes);
     }
+
+    @DeleteMapping("/{atendenteId}")
+    public ResponseEntity<Void> excluirAtendente(
+            @PathVariable Long quiosqueId, 
+            @PathVariable Long atendenteId) {
+        
+        atendenteService.excluirAtendente(atendenteId);
+        
+        return ResponseEntity.noContent().build(); 
+    }
 }

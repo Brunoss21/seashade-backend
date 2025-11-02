@@ -7,8 +7,10 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.seashade.api_seashade.model.Atendente;
+import com.seashade.api_seashade.model.Comanda;
 import com.seashade.api_seashade.model.Quiosque;
 import com.seashade.api_seashade.repository.AtendenteRepository;
+import com.seashade.api_seashade.repository.ComandaRepository;
 import com.seashade.api_seashade.repository.QuiosqueRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -19,14 +21,16 @@ public class AtendenteService {
 
     private final AtendenteRepository atendenteRepository;
     private final QuiosqueRepository quiosqueRepository;
-    private final EmailService emailService; 
+    private final EmailService emailService;
+    private final ComandaRepository comandaRepository; 
 
     public AtendenteService(AtendenteRepository atendenteRepository, 
                             QuiosqueRepository quiosqueRepository, 
-                            EmailService emailService) {
+                            EmailService emailService, ComandaRepository comandaRepository) {
         this.atendenteRepository = atendenteRepository;
         this.quiosqueRepository = quiosqueRepository;
         this.emailService = emailService;
+        this.comandaRepository = comandaRepository; 
     }
 
     @Transactional
@@ -62,5 +66,25 @@ public class AtendenteService {
         Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
         return atendenteRepository.findByQuiosque(quiosque);
+    }
+
+    @Transactional
+    public void excluirAtendente(Long atendenteId) {
+        Atendente atendente = atendenteRepository.findById(atendenteId)
+            .orElseThrow(() -> new EntityNotFoundException("Atendente não encontrado com id: " + atendenteId));
+
+        List<Comanda.StatusComanda> statusAtivos = List.of(
+            Comanda.StatusComanda.ABERTA,
+            Comanda.StatusComanda.NA_COZINHA,
+            Comanda.StatusComanda.EM_PREPARO,
+            Comanda.StatusComanda.PRONTO_PARA_ENTREGA
+        );
+
+        boolean temComandasAtivas = comandaRepository.existsByAtendenteAndStatusIn(atendente, statusAtivos);
+
+        if (temComandasAtivas) {
+            throw new IllegalStateException("Não é possível excluir este atendente, pois ele possui comandas ativas.");
+        }
+        atendenteRepository.delete(atendente);
     }
 }

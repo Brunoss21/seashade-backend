@@ -12,6 +12,7 @@ import com.seashade.api_seashade.model.Atendente;
 import com.seashade.api_seashade.model.Comanda;
 import com.seashade.api_seashade.model.GuardaSol;
 import com.seashade.api_seashade.model.ItemPedido;
+import com.seashade.api_seashade.model.StatusItem;
 import com.seashade.api_seashade.model.Produto;
 import com.seashade.api_seashade.model.Quiosque;
 import com.seashade.api_seashade.model.User;
@@ -100,12 +101,13 @@ public class ComandaService {
         return comandaSalva;
     }
 
+
     @Transactional
     public ItemPedido adicionarItem(Long comandaId, Long produtoId, Integer quantidade) {
-        Comanda comanda = comandaRepository.findById(comandaId)
+        // MODIFICADO: Busca comanda com itens para evitar LazyException
+        Comanda comanda = comandaRepository.findByIdWithItensAndProdutos(comandaId)
                 .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com ID: " + comandaId));
 
-        // --- MUDANÇA: Permitir adicionar item apenas se ABERTA ou PRONTO_PARA_ENTREGA ---
         if (comanda.getStatus() != Comanda.StatusComanda.ABERTA && comanda.getStatus() != Comanda.StatusComanda.PRONTO_PARA_ENTREGA) {
             throw new IllegalStateException("Só é possível adicionar itens a comandas ABERTAS ou PRONTAS PARA ENTREGA. Status atual: " + comanda.getStatus());
         }
@@ -118,7 +120,9 @@ public class ComandaService {
         novoItem.setProduto(produto);
         novoItem.setQuantidade(quantidade);
         novoItem.setPrecoUnitario(produto.getPreco());
+        novoItem.setStatus(StatusItem.PENDENTE); 
 
+        novoItem.setStatus(StatusItem.PENDENTE);
         ItemPedido itemSalvo = itemPedidoRepository.save(novoItem);
 
         comanda.getItens().add(itemSalvo);
@@ -132,7 +136,7 @@ public class ComandaService {
                 .map(item -> item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         comanda.setValorTotal(novoTotal);
-        comandaRepository.save(comanda); // Salva a comanda com o novo status (se mudou) e novo total
+        comandaRepository.save(comanda);
 
         return itemSalvo;
     }
@@ -140,43 +144,77 @@ public class ComandaService {
 
     @Transactional
     public Comanda enviarParaCozinha(Long comandaId) {
-        Comanda comanda = comandaRepository.findById(comandaId)
+        // Busca comanda com itens para evitar LazyException
+        Comanda comanda = comandaRepository.findByIdWithItensAndProdutos(comandaId)
             .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada: " + comandaId));
 
-        // Só pode enviar se estiver ABERTA e tiver itens
         if (comanda.getStatus() != Comanda.StatusComanda.ABERTA) {
             throw new IllegalStateException("Só é possível enviar comandas ABERTAS para a cozinha. Status atual: " + comanda.getStatus());
         }
-        if (comanda.getItens() == null || comanda.getItens().isEmpty()) {
-            throw new IllegalStateException("Não é possível enviar uma comanda vazia para a cozinha.");
+
+        // Encontra todos os itens PENDENTES
+        List<ItemPedido> itensParaEnviar = comanda.getItens().stream()
+            .filter(item -> item.getStatus() == StatusItem.PENDENTE)
+            .toList();
+
+        if (itensParaEnviar.isEmpty()) {
+            throw new IllegalStateException("Não há novos itens PENDENTES para enviar à cozinha.");
         }
 
-        comanda.setStatus(Comanda.StatusComanda.NA_COZINHA); // Muda para NA_COZINHA
+        // Atualiza o status de cada item
+        for (ItemPedido item : itensParaEnviar) {
+            item.setStatus(StatusItem.NA_COZINHA);
+        }
+        itemPedidoRepository.saveAll(itensParaEnviar); // Salva todos os itens
+
+        comanda.setStatus(Comanda.StatusComanda.NA_COZINHA); // Muda status da comanda
         return comandaRepository.save(comanda);
     }
 
     @Transactional
     public Comanda marcarComandaEmPreparo(Long comandaId) {
-        Comanda comanda = comandaRepository.findById(comandaId)
+        // Busca comanda com itens para evitar LazyException
+        Comanda comanda = comandaRepository.findByIdWithItensAndProdutos(comandaId)
             .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada: " + comandaId));
 
         if (comanda.getStatus() != Comanda.StatusComanda.NA_COZINHA) {
              throw new IllegalStateException("Só é possível iniciar o preparo de comandas que estão 'NA_COZINHA'. Status atual: " + comanda.getStatus());
         }
-        comanda.setStatus(Comanda.StatusComanda.EM_PREPARO); // Muda para EM_PREPARO
+        comanda.setStatus(Comanda.StatusComanda.EM_PREPARO); // Muda status da comanda
+        
+        List<ItemPedido> itensParaPreparo = comanda.getItens().stream()
+            .filter(item -> item.getStatus() == StatusItem.NA_COZINHA)
+            .toList();
+
+        for (ItemPedido item : itensParaPreparo) {
+            item.setStatus(StatusItem.EM_PREPARO);
+        }
+        itemPedidoRepository.saveAll(itensParaPreparo);
+
         return comandaRepository.save(comanda);
     }
 
     @Transactional
     public Comanda marcarComandaPronta(Long comandaId) {
-        Comanda comanda = comandaRepository.findById(comandaId)
+        // Busca comanda com itens para evitar LazyException
+        Comanda comanda = comandaRepository.findByIdWithItensAndProdutos(comandaId)
             .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada: " + comandaId));
 
-        // Permite marcar como pronta se estiver EM_PREPARO
         if (comanda.getStatus() != Comanda.StatusComanda.EM_PREPARO) {
              throw new IllegalStateException("Só é possível marcar como pronta comandas que estão 'EM_PREPARO'. Status atual: " + comanda.getStatus());
         }
-        comanda.setStatus(Comanda.StatusComanda.PRONTO_PARA_ENTREGA); // Muda para PRONTO_PARA_ENTREGA
+        comanda.setStatus(Comanda.StatusComanda.PRONTO_PARA_ENTREGA); // Muda status da comanda
+        
+        // Atualiza status dos itens
+        List<ItemPedido> itensProntos = comanda.getItens().stream()
+            .filter(item -> item.getStatus() == StatusItem.EM_PREPARO)
+            .toList();
+
+        for (ItemPedido item : itensProntos) {
+            item.setStatus(StatusItem.PRONTO);
+        }
+        itemPedidoRepository.saveAll(itensProntos);
+
         return comandaRepository.save(comanda);
     }
 
@@ -185,7 +223,6 @@ public class ComandaService {
         Comanda comanda = comandaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com id: " + id));
 
-        // Permite finalizar se ABERTA ou PRONTO_PARA_ENTREGA
         if (comanda.getStatus() != Comanda.StatusComanda.ABERTA && comanda.getStatus() != Comanda.StatusComanda.PRONTO_PARA_ENTREGA) {
             throw new IllegalStateException("Apenas comandas ABERTAS ou PRONTAS PARA ENTREGA podem ser finalizadas. Status atual: " + comanda.getStatus());
         }
@@ -202,7 +239,7 @@ public class ComandaService {
         return comandaRepository.save(comanda);
     }
 
-    @Transactional
+   @Transactional
     public Comanda cancelarComanda(Long id) {
         Comanda comanda = comandaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com id: " + id));
@@ -212,7 +249,7 @@ public class ComandaService {
             throw new IllegalStateException("Comandas FECHADAS não podem ser canceladas.");
         }
 
-        // Se já foi cancelada, não faz nada (ou lança exceção, opcional)
+        // Se já foi cancelada, não faz nada
         if (comanda.getStatus() == Comanda.StatusComanda.CANCELADA) {
             return comanda; // Já está cancelada
         }
@@ -221,24 +258,51 @@ public class ComandaService {
         if (comanda.getDataFechamento() == null) {
             comanda.setDataFechamento(LocalDateTime.now());
         }
-        /*
+
+        // --- INÍCIO DA LÓGICA GUARDA-SOL ---
         GuardaSol guardaSol = comanda.getGuardaSol();
-        // Libera o guarda-sol apenas se a comanda ainda o estava ocupando
-        // (pode já ter sido liberado por outra lógica, embora improvável aqui)
         if (guardaSol != null && guardaSol.getStatus() == GuardaSol.StatusGuardaSol.OCUPADO) {
-             // Verificação extra (opcional): checar se *esta* comanda era a última ABERTA/NA_COZINHA/EM_PREPARO/PRONTA para este guarda-sol antes de liberar
-             // boolean isLastActiveComandaForGuardaSol = !comandaRepository.existsByGuardaSolAndStatusIn(guardaSol,
-             //        List.of(StatusComanda.ABERTA, StatusComanda.NA_COZINHA, StatusComanda.EM_PREPARO, StatusComanda.PRONTO_PARA_ENTREGA));
-             // if(isLastActiveComandaForGuardaSol) { // Descomente se implementar a verificação acima e o método no repo
-                 guardaSol.setStatus(GuardaSol.StatusGuardaSol.LIVRE);
-                 guardaSolRepository.save(guardaSol);
-             // }
+            
+            // Lista de status que mantêm o guarda-sol ocupado
+            List<Comanda.StatusComanda> statusAtivos = List.of(
+                Comanda.StatusComanda.ABERTA,
+                Comanda.StatusComanda.NA_COZINHA,
+                Comanda.StatusComanda.EM_PREPARO,
+                Comanda.StatusComanda.PRONTO_PARA_ENTREGA
+            );
+
+            // Verifica se existe ALGUMA OUTRA comanda ativa para este guarda-sol
+            boolean outrasComandasAtivas = comandaRepository.existsByGuardaSolAndStatusInAndIdNot(
+                guardaSol, 
+                statusAtivos, 
+                comanda.getId() 
+            );
+
+            if (!outrasComandasAtivas) {
+                // Nenhuma outra comanda ativa foi encontrada. PODE liberar o guarda-sol.
+                guardaSol.setStatus(GuardaSol.StatusGuardaSol.LIVRE);
+                guardaSolRepository.save(guardaSol);
+            }
+        
         }
-        */
+
         return comandaRepository.save(comanda);
     }
 
-    // ... (buscarComandaPorId e listarComandasPorQuiosque permanecem iguais) ...
+
+    // --- MARCA ITEM COMO ENTREGUE ---
+    @Transactional
+    public ItemPedido marcarItemEntregue(Long itemId) {
+        ItemPedido item = itemPedidoRepository.findById(itemId)
+            .orElseThrow(() -> new EntityNotFoundException("Item não encontrado: " + itemId));
+        
+        if (item.getStatus() != StatusItem.PRONTO) {
+             throw new IllegalStateException("Só é possível marcar como 'ENTREGUE' itens que estão 'PRONTO'. Status atual: " + item.getStatus());
+        }
+        item.setStatus(StatusItem.ENTREGUE);
+        return itemPedidoRepository.save(item);
+    }
+  
     public Comanda buscarComandaPorId(Long comandaId) {
         Comanda comanda = comandaRepository.findByIdWithItensAndProdutos(comandaId) 
                 .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com ID: " + comandaId));
@@ -259,11 +323,10 @@ public class ComandaService {
 
         comandas.forEach(comanda -> {
             comanda.getItens().size();
-            if (comanda.getGuardaSol() != null) comanda.getGuardaSol().getIdentificacao(); // ou .getNumero()
+            if (comanda.getGuardaSol() != null) comanda.getGuardaSol().getIdentificacao(); 
         });
 
         return comandas;
     }
 
 }
-

@@ -108,6 +108,12 @@ public class ComandaController {
         return ResponseEntity.ok(new ComandaResponseDto(comandaCancelada)); // Retorna DTO
     }
 
-} 
+    // --- MARCA ITEM COMO ENTREGUE ---
+    @PatchMapping("/itens/{itemId}/marcar-entregue")
+    public ResponseEntity<ItemPedidoResponseDto> marcarItemEntregue(@PathVariable Long itemId) {
+        ItemPedido itemAtualizado = comandaService.marcarItemEntregue(itemId);
+        return ResponseEntity.ok(new ItemPedidoResponseDto(itemAtualizado));
+    }
 
 
+}
