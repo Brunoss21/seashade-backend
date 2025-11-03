@@ -69,4 +69,29 @@ public class RelatorioController {
         int anoBusca = (ano == 0) ? LocalDate.now().getYear() : ano;
         return ResponseEntity.ok(relatorioService.getPedidosMensais(quiosqueId, anoBusca));
     }
+
+    @GetMapping("/kpis")
+    public ResponseEntity<KpiDto> getKpis(@PathVariable Long quiosqueId) {
+        return ResponseEntity.ok(relatorioService.getKpis(quiosqueId));
+    }
+
+    @GetMapping("/visao-equipe")
+    public ResponseEntity<List<VisaoEquipeDto>> getVisaoEquipe(@PathVariable Long quiosqueId) {
+        return ResponseEntity.ok(relatorioService.getVisaoEquipe(quiosqueId));
+    }
+
+    @GetMapping("/top-itens")
+    public ResponseEntity<List<TopItemDto>> getTopItens(@PathVariable Long quiosqueId) {
+        return ResponseEntity.ok(relatorioService.getTopItens(quiosqueId));
+    }
+
+    @GetMapping("/bottom-itens")
+    public ResponseEntity<List<BottomItemDto>> getBottomItens(@PathVariable Long quiosqueId) {
+        return ResponseEntity.ok(relatorioService.getBottomItens(quiosqueId));
+    }
+
+    @GetMapping("/estoque-critico")
+    public ResponseEntity<List<EstoqueCriticoDto>> getEstoqueCritico(@PathVariable Long quiosqueId) {
+        return ResponseEntity.ok(relatorioService.getEstoqueCritico(quiosqueId));
+    }
 }

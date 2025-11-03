@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.seashade.api_seashade.model.Atendente;
 import com.seashade.api_seashade.model.Comanda;
 import com.seashade.api_seashade.model.GuardaSol;
+import com.seashade.api_seashade.model.ItemEstoque;
 import com.seashade.api_seashade.model.ItemPedido;
 import com.seashade.api_seashade.model.StatusItem;
 import com.seashade.api_seashade.model.Produto;
@@ -19,6 +20,7 @@ import com.seashade.api_seashade.model.User;
 import com.seashade.api_seashade.repository.AtendenteRepository;
 import com.seashade.api_seashade.repository.ComandaRepository;
 import com.seashade.api_seashade.repository.GuardaSolRepository;
+import com.seashade.api_seashade.repository.ItemEstoqueRepository;
 import com.seashade.api_seashade.repository.ItemPedidoRepository;
 import com.seashade.api_seashade.repository.ProdutoRepository;
 import com.seashade.api_seashade.repository.QuiosqueRepository;
@@ -30,6 +32,8 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class ComandaService {
+
+    private final ItemEstoqueRepository itemEstoqueRepository;
 
     private final ComandaRepository comandaRepository;
     private final GuardaSolRepository guardaSolRepository;
@@ -45,7 +49,8 @@ public class ComandaService {
                           QuiosqueRepository quiosqueRepository,
                           UserRepository userRepository,
                           ProdutoRepository produtoRepository,
-                          ItemPedidoRepository itemPedidoRepository) { 
+                          ItemPedidoRepository itemPedidoRepository,
+                          ItemEstoqueRepository itemEstoqueRepository) { 
         this.comandaRepository = comandaRepository;
         this.guardaSolRepository = guardaSolRepository;
         this.atendenteRepository = atendenteRepository;
@@ -53,6 +58,7 @@ public class ComandaService {
         this.userRepository = userRepository; 
         this.produtoRepository = produtoRepository;
         this.itemPedidoRepository = itemPedidoRepository;
+        this.itemEstoqueRepository = itemEstoqueRepository;
     }
 
     @Transactional
@@ -220,11 +226,43 @@ public class ComandaService {
 
     @Transactional
     public Comanda finalizarComanda(Long id) {
-        Comanda comanda = comandaRepository.findById(id)
+        // Busca a comanda E seus itens 
+        Comanda comanda = comandaRepository.findByIdWithItensAndProdutos(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com id: " + id));
 
+        // Verificação de status
         if (comanda.getStatus() != Comanda.StatusComanda.ABERTA && comanda.getStatus() != Comanda.StatusComanda.PRONTO_PARA_ENTREGA) {
             throw new IllegalStateException("Apenas comandas ABERTAS ou PRONTAS PARA ENTREGA podem ser finalizadas. Status atual: " + comanda.getStatus());
+        }
+
+        Long quiosqueId = comanda.getQuiosque().getId();
+        
+        for (ItemPedido itemVendido : comanda.getItens()) {
+            // Ignora itens que já foram "processados" (Entregues) em um pedido anterior
+            // Só desconta itens que estão PENDENTE ou PRONTO (ou seja, desta "leva")
+            if (itemVendido.getStatus() == StatusItem.PENDENTE || itemVendido.getStatus() == StatusItem.PRONTO) {
+                
+                String nomeProdutoVendido = itemVendido.getProduto().getNome();
+                
+                // Encontra o item correspondente no inventário (ItemEstoque)
+                ItemEstoque itemEstoque = itemEstoqueRepository.findByQuiosqueIdAndNome(quiosqueId, nomeProdutoVendido)
+                    .orElse(null); // Ignora se não houver controle de estoque para este item
+
+                if (itemEstoque != null) {
+                    // Converte a quantidade vendida (Integer) para BigDecimal
+                    BigDecimal quantidadeVendida = new BigDecimal(itemVendido.getQuantidade());
+                    
+                    // Pega a quantidade atual em estoque
+                    BigDecimal estoqueAtual = itemEstoque.getQuantidadeAtual();
+                    
+                    // Calcula o novo estoque
+                    BigDecimal novoEstoque = estoqueAtual.subtract(quantidadeVendida);
+
+                    // Atualiza o estoque
+                    itemEstoque.setQuantidadeAtual(novoEstoque);
+                    itemEstoqueRepository.save(itemEstoque);
+                }
+            }
         }
 
         comanda.setStatus(Comanda.StatusComanda.FECHADA);

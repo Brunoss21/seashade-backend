@@ -35,6 +35,9 @@ public class ItemEstoque {
     @Column(name = "quantidade_atual", nullable = false)
     private BigDecimal quantidadeAtual;
 
+    @Column(name = "estoque_maximo")
+    private Integer estoqueMaximo;
+
     @Column(name = "custo_unitario")
     private BigDecimal custoUnitario; // Custo por kg/L/unidade
 
@@ -63,6 +66,8 @@ public class ItemEstoque {
     public void setQuiosque(Quiosque quiosque) { this.quiosque = quiosque; }
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
+    public Integer getEstoqueMaximo() { return estoqueMaximo; }
+    public void setEstoqueMaximo(Integer estoqueMaximo) { this.estoqueMaximo = estoqueMaximo; }
 
 
 }

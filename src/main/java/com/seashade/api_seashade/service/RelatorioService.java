@@ -3,29 +3,50 @@ package com.seashade.api_seashade.service;
 import com.seashade.api_seashade.controller.dto.relatorios.*;
 import com.seashade.api_seashade.model.Comanda;
 import com.seashade.api_seashade.model.Despesa;
+import com.seashade.api_seashade.model.ItemEstoque;
+import com.seashade.api_seashade.model.Quiosque;
 import com.seashade.api_seashade.model.Atendente;
 import com.seashade.api_seashade.repository.AtendenteRepository;
+import com.seashade.api_seashade.repository.BottomItemProjection;
 import com.seashade.api_seashade.repository.ComandaRepository;
 import com.seashade.api_seashade.repository.DespesaRepository;
+import com.seashade.api_seashade.repository.ItemEstoqueRepository;
+import com.seashade.api_seashade.repository.ProdutoRepository;
+import com.seashade.api_seashade.repository.QuiosqueRepository;
+import com.seashade.api_seashade.repository.TopItemProjection;
+
+import java.util.stream.Collectors;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 @Service
 public class RelatorioService {
 
+    private final ProdutoRepository produtoRepository;
+
+    private final QuiosqueRepository quiosqueRepository;
+
     private final ComandaRepository comandaRepository;
     private final DespesaRepository despesaRepository;
     private final AtendenteRepository atendenteRepository; 
+    private final ItemEstoqueRepository itemEstoqueRepository;
 
     private static final Locale LOCALE_BR = new Locale.Builder().setLanguage("pt").setRegion("BR").build(); 
     private static final DateTimeFormatter MES_FORMATTER = DateTimeFormatter.ofPattern("MMM", LOCALE_BR);
@@ -34,11 +55,24 @@ public class RelatorioService {
 
     public RelatorioService(ComandaRepository comandaRepository,
                             DespesaRepository despesaRepository,
-                            AtendenteRepository atendenteRepository) {
+                            AtendenteRepository atendenteRepository,
+                            QuiosqueRepository quiosqueRepository,
+                            ProdutoRepository produtoRepository,
+                            ItemEstoqueRepository itemEstoqueRepository) {
         this.comandaRepository = comandaRepository;
         this.despesaRepository = despesaRepository;
         this.atendenteRepository = atendenteRepository;
+        this.quiosqueRepository = quiosqueRepository;
+        this.produtoRepository = produtoRepository;
+        this.itemEstoqueRepository = itemEstoqueRepository;
     }
+
+    private static final List<Comanda.StatusComanda> STATUS_ATIVOS = List.of(
+            Comanda.StatusComanda.ABERTA,
+            Comanda.StatusComanda.NA_COZINHA,
+            Comanda.StatusComanda.EM_PREPARO,
+            Comanda.StatusComanda.PRONTO_PARA_ENTREGA
+    );
 
     // --- Vendas Diárias ---
     public List<VendasDiariasDto> getVendasDiarias(Long quiosqueId, int dias) {
@@ -61,6 +95,23 @@ public class RelatorioService {
                              dia.getDisplayName(DIA_SEMANA_STYLE, LOCALE_BR), // Obtem nome curto ("Seg", "Ter"...)
                              vendasPorDia.getOrDefault(dia, 0L))) // Pega contagem ou 0
                      .collect(Collectors.toList());
+    }
+
+    public List<EstoqueCriticoDto> getEstoqueCritico(Long quiosqueId) {
+        
+        Pageable limit = PageRequest.of(0, 3); 
+
+        List<ItemEstoque> itens = itemEstoqueRepository.findByQuiosqueIdOrderByQuantidadeAtualAsc(
+            quiosqueId, limit
+        );
+
+        return itens.stream()
+            .map(item -> new EstoqueCriticoDto(
+                item.getNome(),      
+                item.getQuantidadeAtual(),    
+                item.getEstoqueMaximo()    
+            ))
+            .collect(Collectors.toList());
     }
 
     // --- Faturamento Mensal ---
@@ -258,5 +309,93 @@ public class RelatorioService {
                              mes.getDisplayName(TextStyle.SHORT, LOCALE_BR), // "Jan", "Fev"...
                              pedidosPorMes.getOrDefault(mes, 0L))) // Pega a contagem ou 0
                      .collect(Collectors.toList());
+    }
+
+    public KpiDto getKpis(Long quiosqueId) {
+        Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
+
+        // 1. Pedidos Ativos (Conta quantos estão ABERTOS, NA_COZINHA, etc.)
+        long pedidosAtivos = comandaRepository.countByQuiosqueAndStatusIn(quiosque, STATUS_ATIVOS);
+
+        // 2. Pedidos Finalizados Hoje (Define o intervalo de "Hoje")
+        LocalDateTime inicioDoDia = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime fimDoDia = LocalDateTime.now().with(LocalTime.MAX);
+        
+        long pedidosFinalizadosHoje = comandaRepository.countByQuiosqueAndStatusAndDataFechamentoBetween(
+            quiosque, Comanda.StatusComanda.FECHADA, inicioDoDia, fimDoDia
+        );
+
+        // 3. Ticket Médio (Faturamento de Hoje / Pedidos de Hoje)
+        List<Comanda> comandasDeHoje = comandaRepository.findByQuiosqueIdAndStatusAndDataFechamentoBetween(
+            quiosqueId, Comanda.StatusComanda.FECHADA, inicioDoDia, fimDoDia
+        );
+        
+        BigDecimal faturamentoTotalHoje = comandasDeHoje.stream()
+            .map(Comanda::getValorTotal)
+            .filter(Objects::nonNull) // Ignora valores nulos
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal ticketMedio = BigDecimal.ZERO;
+        if (pedidosFinalizadosHoje > 0) {
+            // Calcula: Faturamento / Qtd Pedidos, com 2 casas decimais
+            ticketMedio = faturamentoTotalHoje.divide(BigDecimal.valueOf(pedidosFinalizadosHoje), 2, RoundingMode.HALF_UP);
+        }
+
+        return new KpiDto(ticketMedio, pedidosAtivos, pedidosFinalizadosHoje,faturamentoTotalHoje);
+    }
+
+    public List<TopItemDto> getTopItens(Long quiosqueId) {
+        LocalDateTime inicioDoDia = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime fimDoDia = LocalDateTime.now().with(LocalTime.MAX);
+
+        List<TopItemProjection> projections = comandaRepository.findTopVendidosHoje(
+            quiosqueId, inicioDoDia, fimDoDia
+        );
+
+        return projections.stream()
+            .map(p -> new TopItemDto(p.getNome(), p.getQtd()))
+            .collect(Collectors.toList());
+    }
+
+    public List<VisaoEquipeDto> getVisaoEquipe(Long quiosqueId) {
+        Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
+
+        List<Atendente> atendentes = atendenteRepository.findByQuiosque(quiosque);
+
+        LocalDateTime inicioDoDia = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime fimDoDia = LocalDateTime.now().with(LocalTime.MAX);
+
+        List<VisaoEquipeDto> visaoEquipe = new ArrayList<>();
+
+        for (Atendente atendente : atendentes) {
+            long pedidosAtivos = comandaRepository.countByAtendenteAndStatusIn(atendente, STATUS_ATIVOS);
+            
+            long totalAtendidosHoje = comandaRepository.countByAtendenteAndStatusAndDataFechamentoBetween(
+                atendente, 
+                Comanda.StatusComanda.FECHADA, 
+                inicioDoDia, 
+                fimDoDia
+            );
+            visaoEquipe.add(new VisaoEquipeDto(atendente.getNome(), pedidosAtivos, totalAtendidosHoje));
+        }
+        return visaoEquipe;
+    }
+
+    public List<BottomItemDto> getBottomItens(Long quiosqueId) {
+        // Define o intervalo de "Hoje"
+        LocalDateTime inicioDoDia = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime fimDoDia = LocalDateTime.now().with(LocalTime.MAX);
+
+        // Chama a nova query nativa
+        List<BottomItemProjection> projections = produtoRepository.findBottomVendidosHoje(
+            quiosqueId, inicioDoDia, fimDoDia
+        );
+
+        // Converte a Projeção para o DTO
+        return projections.stream()
+            .map(p -> new BottomItemDto(p.getNome(), p.getQtdVendida()))
+            .collect(Collectors.toList());
     }
 }
