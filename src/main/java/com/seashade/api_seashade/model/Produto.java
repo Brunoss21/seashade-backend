@@ -1,10 +1,13 @@
 package com.seashade.api_seashade.model;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -45,6 +49,9 @@ public class Produto {
         SOBREMESAS
     }
 
+    @Column(nullable = false)
+    private boolean ativo = true; // por padrão, todo novo é ativo
+
     private Integer estoque;
 
     // Muitos Produtos pertencem a um Quiosque
@@ -52,6 +59,10 @@ public class Produto {
     @JoinColumn(name = "quiosque_id", nullable = false)
     @JsonBackReference 
     private Quiosque quiosque;
+
+    @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private Set<ComponenteProduto> componentes;
 
     // --- Getters e Setters ---
     public Long getId() { return id; }
@@ -68,6 +79,9 @@ public class Produto {
     public void setQuiosque(Quiosque quiosque) { this.quiosque = quiosque; }
     public CategoriaProduto getCategoria() { return categoria; }
     public void setCategoria(CategoriaProduto categoria) { this.categoria = categoria; }
-
+    public Set<ComponenteProduto> getComponentes() { return componentes; }
+    public void setComponentes(Set<ComponenteProduto> componentes) { this.componentes = componentes; }
+    public boolean isAtivo() { return ativo; }
+    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 
 }

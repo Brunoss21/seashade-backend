@@ -31,4 +31,5 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                                   @Param("inicio") LocalDateTime inicio,
                                                   @Param("fim") LocalDateTime fim);
 
+    List<Produto> findByQuiosqueIdAndAtivoTrue(Long quiosqueId);
 }

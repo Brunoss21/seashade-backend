@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.seashade.api_seashade.model.Atendente;
 import com.seashade.api_seashade.model.Comanda;
+import com.seashade.api_seashade.model.ComponenteProduto;
 import com.seashade.api_seashade.model.GuardaSol;
 import com.seashade.api_seashade.model.ItemEstoque;
 import com.seashade.api_seashade.model.ItemPedido;
@@ -19,6 +20,7 @@ import com.seashade.api_seashade.model.Quiosque;
 import com.seashade.api_seashade.model.User;
 import com.seashade.api_seashade.repository.AtendenteRepository;
 import com.seashade.api_seashade.repository.ComandaRepository;
+import com.seashade.api_seashade.repository.ComponenteProdutoRepository;
 import com.seashade.api_seashade.repository.GuardaSolRepository;
 import com.seashade.api_seashade.repository.ItemEstoqueRepository;
 import com.seashade.api_seashade.repository.ItemPedidoRepository;
@@ -42,6 +44,7 @@ public class ComandaService {
     private final ProdutoRepository produtoRepository;
     private final ItemPedidoRepository itemPedidoRepository;
     private final UserRepository userRepository;
+    private final ComponenteProdutoRepository componenteProdutoRepository;
 
     public ComandaService(ComandaRepository comandaRepository,
                           GuardaSolRepository guardaSolRepository,
@@ -50,7 +53,8 @@ public class ComandaService {
                           UserRepository userRepository,
                           ProdutoRepository produtoRepository,
                           ItemPedidoRepository itemPedidoRepository,
-                          ItemEstoqueRepository itemEstoqueRepository) { 
+                          ItemEstoqueRepository itemEstoqueRepository,
+                          ComponenteProdutoRepository componenteProdutoRepository) { 
         this.comandaRepository = comandaRepository;
         this.guardaSolRepository = guardaSolRepository;
         this.atendenteRepository = atendenteRepository;
@@ -59,6 +63,7 @@ public class ComandaService {
         this.produtoRepository = produtoRepository;
         this.itemPedidoRepository = itemPedidoRepository;
         this.itemEstoqueRepository = itemEstoqueRepository;
+        this.componenteProdutoRepository = componenteProdutoRepository;
     }
 
     @Transactional
@@ -110,7 +115,7 @@ public class ComandaService {
 
     @Transactional
     public ItemPedido adicionarItem(Long comandaId, Long produtoId, Integer quantidade) {
-        // MODIFICADO: Busca comanda com itens para evitar LazyException
+        // Busca comanda com itens para evitar LazyException
         Comanda comanda = comandaRepository.findByIdWithItensAndProdutos(comandaId)
                 .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com ID: " + comandaId));
 
@@ -226,45 +231,43 @@ public class ComandaService {
 
     @Transactional
     public Comanda finalizarComanda(Long id) {
-        // Busca a comanda E seus itens 
         Comanda comanda = comandaRepository.findByIdWithItensAndProdutos(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com id: " + id));
 
-        // Verificação de status
         if (comanda.getStatus() != Comanda.StatusComanda.ABERTA && comanda.getStatus() != Comanda.StatusComanda.PRONTO_PARA_ENTREGA) {
-            throw new IllegalStateException("Apenas comandas ABERTAS ou PRONTAS PARA ENTREGA podem ser finalizadas. Status atual: " + comanda.getStatus());
+            throw new IllegalStateException("Apenas comandas ABERTAS ou PRONTAS PARA ENTREGA podem ser finalizadas.");
         }
 
-        Long quiosqueId = comanda.getQuiosque().getId();
-        
         for (ItemPedido itemVendido : comanda.getItens()) {
-            // Ignora itens que já foram "processados" (Entregues) em um pedido anterior
-            // Só desconta itens que estão PENDENTE ou PRONTO (ou seja, desta "leva")
+            // Só desconta itens que ainda não foram "processados" (Entregues)
             if (itemVendido.getStatus() == StatusItem.PENDENTE || itemVendido.getStatus() == StatusItem.PRONTO) {
                 
-                String nomeProdutoVendido = itemVendido.getProduto().getNome();
+                Produto produtoVendido = itemVendido.getProduto();
                 
-                // Encontra o item correspondente no inventário (ItemEstoque)
-                ItemEstoque itemEstoque = itemEstoqueRepository.findByQuiosqueIdAndNome(quiosqueId, nomeProdutoVendido)
-                    .orElse(null); // Ignora se não houver controle de estoque para este item
+                // 1. Encontra a "receita" (lista de componentes) para este produto
+List<ComponenteProduto> receita = componenteProdutoRepository.findByProdutoId(produtoVendido.getId());                
+                // 2. Pega a quantidade vendida (ex: 2x Porção de Batata)
+                BigDecimal quantidadeVendida = new BigDecimal(itemVendido.getQuantidade());
 
-                if (itemEstoque != null) {
-                    // Converte a quantidade vendida (Integer) para BigDecimal
-                    BigDecimal quantidadeVendida = new BigDecimal(itemVendido.getQuantidade());
+                // 3. Itera sobre cada ingrediente da receita
+                for (ComponenteProduto componente : receita) {
+                    ItemEstoque itemEstoque = componente.getItemEstoque(); // ex: "Batata Congelada"
+                    BigDecimal quantidadeUtilizada = componente.getQuantidadeUtilizada(); // ex: 0.5 (kg)
                     
-                    // Pega a quantidade atual em estoque
+                    // 4. Calcula o total a descontar (ex: 2 * 0.5 = 1.0 kg)
+                    BigDecimal totalDescontar = quantidadeUtilizada.multiply(quantidadeVendida);
+                    
+                    // 5. Atualiza o estoque do ingrediente
                     BigDecimal estoqueAtual = itemEstoque.getQuantidadeAtual();
+                    BigDecimal novoEstoque = estoqueAtual.subtract(totalDescontar);
                     
-                    // Calcula o novo estoque
-                    BigDecimal novoEstoque = estoqueAtual.subtract(quantidadeVendida);
-
-                    // Atualiza o estoque
                     itemEstoque.setQuantidadeAtual(novoEstoque);
                     itemEstoqueRepository.save(itemEstoque);
                 }
             }
         }
 
+        // (Lógica para fechar a comanda e liberar o guarda-sol)
         comanda.setStatus(Comanda.StatusComanda.FECHADA);
         comanda.setDataFechamento(LocalDateTime.now());
 

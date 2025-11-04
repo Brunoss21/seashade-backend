@@ -1,8 +1,10 @@
 package com.seashade.api_seashade.model;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
@@ -13,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -49,6 +52,10 @@ public class ItemEstoque {
     @JsonBackReference
     private Quiosque quiosque;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "itemEstoque")
+    private Set<ComponenteProduto> usosDoComponente;
+
     // --- Getters e Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -68,6 +75,6 @@ public class ItemEstoque {
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
     public Integer getEstoqueMaximo() { return estoqueMaximo; }
     public void setEstoqueMaximo(Integer estoqueMaximo) { this.estoqueMaximo = estoqueMaximo; }
-
-
+    public Set<ComponenteProduto> getUsosDoComponente() { return usosDoComponente; }
+    public void setUsosDoComponente(Set<ComponenteProduto> usosDoComponente) { this.usosDoComponente = usosDoComponente; }
 }

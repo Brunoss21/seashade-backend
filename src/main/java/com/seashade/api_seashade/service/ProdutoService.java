@@ -3,9 +3,11 @@ package com.seashade.api_seashade.service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.seashade.api_seashade.controller.dto.ProdutoResponseDto;
 import com.seashade.api_seashade.model.Produto;
 import com.seashade.api_seashade.model.Quiosque;
 import com.seashade.api_seashade.repository.ProdutoRepository;
@@ -25,12 +27,19 @@ public class ProdutoService {
         this.quiosqueRepository = quiosqueRepository;
     }
 
-    public List<Produto> listarProdutosPorQuiosque(Long quiosqueId){
+    /*public List<Produto> listarProdutosPorQuiosque(Long quiosqueId){
         Quiosque quiosque = quiosqueRepository.findById(quiosqueId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiosque não encontrado"));
         return produtoRepository.findByQuiosque(quiosque);
-    }
+    }*/
 
+    public List<ProdutoResponseDto> listarProdutosPorQuiosque(Long quiosqueId) {
+        List<Produto> entidades = produtoRepository.findByQuiosqueIdAndAtivoTrue(quiosqueId);
+            return entidades.stream()
+            .map(ProdutoResponseDto::new)
+            .collect(Collectors.toList());
+    }
+    
     public Optional<Produto> buscarProdutoPorId(Long produtoId) {
         return produtoRepository.findById(produtoId);
     }
@@ -70,6 +79,18 @@ public class ProdutoService {
             .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com o ID: " + produtoId));
     
     produtoRepository.delete(produtoExistente);
+    }
+
+    @Transactional
+    public void desativarProduto(Long produtoId) {
+        // Busca o produto
+        Produto produto = produtoRepository.findById(produtoId)
+            .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com o ID: " + produtoId));
+
+        // Define o produto como 'inativo'
+        produto.setAtivo(false);
+
+        produtoRepository.save(produto);
     }
 
 }

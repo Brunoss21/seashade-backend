@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.seashade.api_seashade.controller.dto.CreateUpdateProdutoDto;
+import com.seashade.api_seashade.controller.dto.ProdutoResponseDto;
 import com.seashade.api_seashade.model.Produto;
 import com.seashade.api_seashade.service.ProdutoService;
 
@@ -30,15 +31,16 @@ public class ProdutoController {
     }
 
     // Endpoint para LISTAR todos os produtos de um quiosque (o cardápio)
-    // Ex: GET /api/quiosques/{id-do-quiosque}/produtos
+    // GET /api/quiosques/{id-do-quiosque}/produtos
     @GetMapping
-    public ResponseEntity<List<Produto>> listarProdutos(@PathVariable Long quiosqueId) {
-        List<Produto> produtos = produtoService.listarProdutosPorQuiosque(quiosqueId);
+    public ResponseEntity<List<ProdutoResponseDto>> getProdutosDoQuiosque(@PathVariable Long quiosqueId) {
+        // Agora ele retorna o DTO "limpo", sem loop
+        List<ProdutoResponseDto> produtos = produtoService.listarProdutosPorQuiosque(quiosqueId);
         return ResponseEntity.ok(produtos);
     }
     
     // Endpoint para CRIAR um novo produto para um quiosque
-    // Ex: POST /api/quiosques/{id-do-quiosque}/produtos
+    // POST /api/quiosques/{id-do-quiosque}/produtos
     @PostMapping
     public ResponseEntity<Produto> criarProduto(@PathVariable Long quiosqueId, @RequestBody CreateUpdateProdutoDto dto) {
         Produto novoProduto = produtoService.criarProduto(
@@ -53,7 +55,7 @@ public class ProdutoController {
     }
 
     // Endpoint para BUSCAR um produto específico pelo seu ID
-    // Ex: GET /api/quiosques/{id-do-quiosque}/produtos/{id-do-produto}
+    // GET /api/quiosques/{id-do-quiosque}/produtos/{id-do-produto}
     @GetMapping("/{produtoId}")
     public ResponseEntity<Optional<Produto>> buscarProdutoPorId(@PathVariable UUID quiosqueId, @PathVariable Long produtoId) {
         Optional<Produto> produto = produtoService.buscarProdutoPorId(produtoId);
@@ -61,7 +63,7 @@ public class ProdutoController {
     }
 
     // Endpoint para ATUALIZAR um produto específico
-    // Ex: PUT /api/quiosques/{id-do-quiosque}/produtos/{id-do-produto}
+    // PUT /api/quiosques/{id-do-quiosque}/produtos/{id-do-produto}
     @PutMapping("/{produtoId}")
     public ResponseEntity<Produto> atualizarProduto(@PathVariable Long quiosqueId, 
                                                     @PathVariable Long produtoId, 
@@ -77,11 +79,9 @@ public class ProdutoController {
         return ResponseEntity.ok(produtoAtualizado);
     }
 
-    // Endpoint para DELETAR um produto específico
-    // Ex: DELETE /api/quiosques/{id-do-quiosque}/produtos/{id-do-produto}
-    @DeleteMapping("/{produtoId}")
-    public ResponseEntity<Void> deletarProduto(@PathVariable Long quiosqueId, @PathVariable Long produtoId) {
-        produtoService.deletarProduto(produtoId);
-        return ResponseEntity.noContent().build(); // Retorna 204 No Content.
+    @PatchMapping("/{produtoId}/desativar")
+    public ResponseEntity<Void> desativarProduto(@PathVariable Long produtoId) {
+        produtoService.desativarProduto(produtoId);
+        return ResponseEntity.noContent().build(); 
     }
 }

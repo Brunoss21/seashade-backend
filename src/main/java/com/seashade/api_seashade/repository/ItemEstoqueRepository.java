@@ -24,4 +24,9 @@ public interface ItemEstoqueRepository extends JpaRepository<ItemEstoque, Long> 
     List<ItemEstoque> findByQuiosqueIdOrderByQuantidadeAtualAsc(Long quiosqueId, Pageable pageable);
     
     Optional<ItemEstoque> findByQuiosqueIdAndNome(Long quiosqueId, String nome);
+
+    /**
+     * Encontra todos os itens de estoque de um quiosque.
+     */
+    List<ItemEstoque> findByQuiosqueId(Long quiosqueId);
 }
