@@ -7,25 +7,26 @@ spring:
       enabled: false
 
   datasource:
-    url: jdbc:postgresql://dpg-d45714ndiees738igp6g-a:5432/seadb
-    username: seadb_user
-    password: QurjNilGVZcPdTSPU4GbpGDjIQHR50zz
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     initialize: true
 
   jpa:
     generate-ddl: true
-    
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
 
-  # ---CONFIGURAÇÃO DE EMAIL ---
   mail:
     host: smtp.gmail.com
     port: 587
     username: ${SPRING_MAIL_USERNAME}
     password: ${SPRING_MAIL_PASSWORD}
-
     properties:
       mail:
         smtp:
