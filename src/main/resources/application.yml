@@ -3,10 +3,8 @@ server:
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+    # Use APENAS esta linha para conexão com o banco
+    url: ${DATABASE_URL} 
 
   jpa:
     hibernate:
@@ -16,6 +14,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  # O restante do seu arquivo (mail, etc.)
   mail:
     host: smtp.gmail.com
     port: 587
