@@ -13,7 +13,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**") // Aplica a todos os endpoints que começam com /api
-                    .allowedOrigins("http://localhost:3000") // Permite requisições aplicação React
+                    .allowedOrigins("https://seashadefront-1.onrender.com") // Permite requisições aplicação React
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Métodos HTTP permitidos
                     .allowedHeaders("*") // Permite todos os cabeçalhos
                     .allowCredentials(true); // Permite o envio de credenciais (cookies, etc.)
