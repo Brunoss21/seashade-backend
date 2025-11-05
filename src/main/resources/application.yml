@@ -5,6 +5,7 @@ spring:
   datasource:
     # Use APENAS esta linha para conexão com o banco
     url: jdbc:${DATABASE_URL}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
