@@ -3,9 +3,11 @@ server:
 
 spring:
   datasource:
-    url: "jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}"
-    username: ${PGUSER}
-    password: ${PGPASSWORD}
+    # 1. Pegamos a DATABASE_URL
+    url: "jdbc:postgresql://${DATABASE_URL_HOST_WITH_PORT}/${DATABASE_URL_PATH}"
+    # 2. Pegamos o usuário e senha dela
+    username: ${DATABASE_URL_USER}
+    password: ${DATABASE_URL_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
