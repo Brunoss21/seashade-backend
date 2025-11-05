@@ -4,7 +4,7 @@ server:
 spring:
   datasource:
     # Use APENAS esta linha para conexão com o banco
-    url: ${DATABASE_URL} 
+    url: jdbc:${DATABASE_URL}
 
   jpa:
     hibernate:
