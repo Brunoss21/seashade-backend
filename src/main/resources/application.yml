@@ -2,25 +2,16 @@ server:
   port: 8080
 
 spring:
-  devtools:
-    restart:
-      enabled: false
-
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
-    initialize: true
 
   jpa:
-    generate-ddl: true
     hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: false
 
   mail:
     host: smtp.gmail.com
@@ -33,4 +24,3 @@ spring:
           auth: true
           starttls:
             enable: true
-      
