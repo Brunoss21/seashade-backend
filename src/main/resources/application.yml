@@ -3,11 +3,10 @@ server:
 
 spring:
   datasource:
-    # 1. Pegamos a DATABASE_URL
-    url: "jdbc:postgresql://${DATABASE_URL_HOST_WITH_PORT}/${DATABASE_URL_PATH}"
-    # 2. Pegamos o usuário e senha dela
-    username: ${DATABASE_URL_USER}
-    password: ${DATABASE_URL_PASSWORD}
+    # Esta linha vai ler a variável que criamos na Etapa 2
+    url: ${SPRING_DATASOURCE_URL}
+    
+    # Esta linha é necessária por causa da etapa anterior
     driver-class-name: org.postgresql.Driver
 
   jpa:
