@@ -82,14 +82,22 @@
 			<version>9.47</version>
 		</dependency>
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+			    <groupId>org.springframework.boot</groupId>
+			    <artifactId>spring-boot-maven-plugin</artifactId>
+			    <configuration>
+			        <packaging>war</packaging>
+			        <layout>ZIP</layout>
+			        <includes>
+			            <include>
+			                <groupId>*</groupId>
+			                <artifactId>*</artifactId>
+			            </include>
+			        </includes>
+			    </configuration>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
